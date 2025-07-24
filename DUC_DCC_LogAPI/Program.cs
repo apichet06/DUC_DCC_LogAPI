@@ -1,8 +1,10 @@
 using AutoMapper;
 using DUC_DCC_LogAPI;
 using DUC_DCC_LogAPI.Data;
+using DUC_DCC_LogAPI.Models.ApiSetting;
 using DUC_DCC_LogAPI.Models.Dto;
 using DUC_DCC_LogAPI.Service.AuthenService;
+using DUC_DCC_LogAPI.Service.DccService;
 using DUC_DCC_LogAPI.Service.Duc_DccLog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -35,11 +37,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     };
 });
 
+builder.Services.Configure<ApiSettings>(
+    builder.Configuration.GetSection("ApiSettings"));
+
+
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSetting")); 
 builder.Services.AddScoped<IDUC_DCC_Log, DUC_DCC_LogService>();
 builder.Services.AddScoped<IAuthenService, AuthenService>();
-
+builder.Services.AddScoped<IScheduleService, ScheduleService>();
 
 
 IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();
