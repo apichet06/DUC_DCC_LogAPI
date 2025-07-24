@@ -1,0 +1,6 @@
+@DUC_DCC_LogAPI_HostAddress = http://localhost:5041
+
+GET {{DUC_DCC_LogAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36301.6
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DUC_DCC_LogAPI", "DUC_DCC_LogAPI\DUC_DCC_LogAPI.csproj", "{FEA2FA50-62F7-4EAB-B550-EB6F426E3790}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FEA2FA50-62F7-4EAB-B550-EB6F426E3790}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FEA2FA50-62F7-4EAB-B550-EB6F426E3790}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FEA2FA50-62F7-4EAB-B550-EB6F426E3790}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FEA2FA50-62F7-4EAB-B550-EB6F426E3790}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EE8E7FA7-6C46-4F8C-A82A-62FC84C0D2FA}
+	EndGlobalSection
+EndGlobal
