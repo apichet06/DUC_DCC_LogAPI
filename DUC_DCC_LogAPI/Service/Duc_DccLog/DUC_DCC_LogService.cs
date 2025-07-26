@@ -48,8 +48,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 var dataInsert = data!.Select(a => new DUC_DCC_Log
                 {
                     Group_name = a.Group_name,
-
-
+                     
                 });
                 await _db.DUC_DCC_Log.AddRangeAsync(dataInsert);
                 var affectRows = await _db.SaveChangesAsync();
@@ -78,10 +77,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 });
                 await _db.DUC_DCC_Log.AddRangeAsync(dataInsert);
                 var affectRows = await _db.SaveChangesAsync();
-
-
-
-
+                 
             }
             catch (Exception ex)
             {
@@ -443,12 +439,12 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             try
             {
 
-                IQueryable<DUC_DCC_Log> query = _db.DUC_DCC_Log.Where(x=>x.Users_action == null);
+                IQueryable<DUC_DCC_Log> query = _db.DUC_DCC_Log.Where(x=>x.Users_action == null && x.dcc_duc == request.tapData);
 
                 if (request != null && request.Search != null && request.Search.Any())
                 {
                     string searchTerm = request.Search.ToLower();
-              
+
                     query = query.Where(x =>
                         x.Group_name!.ToLower().Contains(searchTerm) ||
                         x.Username!.ToLower().Contains(searchTerm) ||
@@ -461,6 +457,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                         x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
                         x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
                         x.Users_action!.ToLower().Contains(searchTerm));
+                       
                 }
 
                 if (request!.startDate.HasValue)
@@ -656,7 +653,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                                 ";
                 string filePath = Path.Combine(_env.ContentRootPath, "Files", "report.xlsx");
                 var message = new MailMessage();
-                message.From = new MailAddress(_smtpSettings.SenderEmail!, _smtpSettings.SenderName);
+                message.From = new MailAddress(_smtpSettings.SenderEmail, _smtpSettings.SenderName);
                 message.To.Add("apichets06@fabrinet.co.th");
                 message.Subject = "AutoMail";
                 message.Body = body;
@@ -664,11 +661,11 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 Attachment attachment = new Attachment(filePath);
                 message.Attachments.Add(attachment);
 
-                using (var client = new SmtpClient(_smtpSettings.SmtpServer, _smtpSettings.SmtpPort))
+                using (var client = new SmtpClient(_smtpSettings.SmtpServer))
                 {
                     client.EnableSsl = true;
-                    client.UseDefaultCredentials = false; // สำคัญ
-                    client.Credentials = new NetworkCredential(_smtpSettings.Username, _smtpSettings.Password);
+                    client.UseDefaultCredentials = true; // สำคัญ
+                    //client.Credentials = new NetworkCredential(_smtpSettings.Username, _smtpSettings.Password);
                     await client.SendMailAsync(message);
                 }
 

@@ -28,10 +28,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Utilities\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Update="Service\Duc_DccLog\DUC_DCC_LogService.cs">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Compile>

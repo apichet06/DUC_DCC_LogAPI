@@ -9,6 +9,15 @@ namespace DUC_DCC_LogAPI.Data
          
         public DbSet<DUC_DCC_Log> DUC_DCC_Log { get; set; }
         public DbSet<Users_Permission> Users_Permission { get; set; }
-        public DbSet<Dcc_crud> Dcc_cruds { get; set; }
+        public DbSet<dcc_crud_log> dcc_crud_log { get; set; }
+        public DbSet<Duc_crud> Duc_Cruds { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder); 
+            modelBuilder.Entity<dcc_crud_log>().HasNoKey(); 
+        
+        }
+
     }
 }

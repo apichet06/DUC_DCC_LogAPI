@@ -66,6 +66,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/DUC_DCC_LogAPI/swagger/v1/swagger.json", "DUC_DCC_LogAPI API");
+    c.RoutePrefix = string.Empty;
+});
 
 app.UseCors(builder => builder
     .AllowAnyOrigin()

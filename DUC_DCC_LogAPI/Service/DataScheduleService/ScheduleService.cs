@@ -1,7 +1,11 @@
-﻿using DUC_DCC_LogAPI.Data;
+﻿using AutoMapper;
+using DUC_DCC_LogAPI.Data;
 using DUC_DCC_LogAPI.Models;
 using DUC_DCC_LogAPI.Models.ApiSetting;
+using DUC_DCC_LogAPI.Models.Dto;
+using DUC_DCC_LogAPI.Utilities;
 using EFCore.BulkExtensions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 namespace DUC_DCC_LogAPI.Service.DccService
@@ -12,27 +16,40 @@ namespace DUC_DCC_LogAPI.Service.DccService
         private readonly HttpClient _httpClient;
         private readonly AppDbContext _dbContext;
         private readonly string _dccApiUrl;
+        private readonly ResponseDto _response;
+        private const string Format = "yyyy-MM-dd HH:mm:ss";
+        private readonly MessageDto _message;
+        private IMapper _mapper;
 
-        public ScheduleService(HttpClient httpClient, AppDbContext dbContext, IConfiguration configuration, IOptions<ApiSettings> apiSettings)
+        public ScheduleService(HttpClient httpClient, AppDbContext dbContext, IConfiguration configuration, IOptions<ApiSettings> apiSettings, IMapper mapper)
         {
             _httpClient = httpClient;
             _dbContext = dbContext;
             _dccApiUrl = apiSettings.Value.DccApiBaseUrl;
+            _response = new ResponseDto();
+            _message = new MessageDto();
+            _mapper = mapper;
         }
-        public async Task ImportDccAsync()
+
+        #region || DCC Import Data ||
+        public async Task<ResponseDto> ImportDccAsync()
         {
             try
             {
-                var id = Guid.NewGuid();
-                var response = await _httpClient.GetAsync($"{_dccApiUrl}?requestId={id}");
+                DateTime DateActiont  = DateTime.Today.AddDays(-1);
+                string formattedDate = DateActiont.ToString("yyyy-MM-dd");
+                var response = await _httpClient.GetAsync($"{_dccApiUrl}&action_datetime={formattedDate}");
                 response.EnsureSuccessStatusCode();
 
-                var json = await response.Content.ReadAsStringAsync();
-                var todos = JsonSerializer.Deserialize<List<Dcc_crud>>(json, new JsonSerializerOptions
+                var serializerOptions = new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
-                });
+                };
 
+                serializerOptions.Converters.Add(new CustomDateTimeConverter());
+
+                var json = await response.Content.ReadAsStringAsync();
+                var todos = JsonSerializer.Deserialize<List<Duc_crud>>(json, serializerOptions);
                 if (todos != null && todos.Any())
                 {
                     const int batchSize = 1000;
@@ -41,39 +58,98 @@ namespace DUC_DCC_LogAPI.Service.DccService
                     {
                         var entities = batch.Select(t => new DUC_DCC_Log
                         {
+                            Group_name = t.Group_name,
+                            Username = t.Username,
                             Action = t.Action,
-                            Action_date_time = t.Action_date_time,
+                            Action_date_time = t.Action_datetime,
                             Bu = t.Bu,
                             Detail = t.Detail,
                             Days_after_action = t.Days_after_action,
-                            Download_more_10_files_day = t.Download_more_10_files_day,
-                            dcc_duc = t.dcc_duc,
+                            Download_more_10_files_day = t.Download_more_10_files_per_day,
+                            dcc_duc = "DUC",
                             Employee_resigning_within_one_month = t.Employee_resigning_within_one_month,
-                            Event_type = t.Event_type,
-                            Group_name = t.Group_name,
+                            Event_type = t.Event_type, 
                             Position = t.Position,
                             Resigned_date = t.Resigned_date,
-                            Unauthorized = t.Unauthorized,
-                            Username = t.Username,
-                            Users_action = t.Users_action,
-                            User_action_date = t.User_action_date
+                            Unauthorized = t.Unauthorized  
                         }).ToList();
 
-                        await _dbContext.BulkInsertAsync(entities); // ถ้าต้องการใส่ options หรือ token สามารถเพิ่มได้
-                        Console.WriteLine($"Inserted batch of {entities.Count} items.");
+                        await _dbContext.AddRangeAsync(entities); // ถ้าต้องการใส่ options หรือ token สามารถเพิ่มได้
+                        //Console.WriteLine($"Inserted batch of {entities.Count} items.");
                     }
 
                     // ไม่มี need แล้วที่จะ SaveChangesAsync หลัง BulkInsert
-                      //await _dbContext.SaveChangesAsync();
+                      await _dbContext.SaveChangesAsync();
+
+                    _response.Message = _message.InsertMessage;
+
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
-                Console.WriteLine(ex.StackTrace);
+              _response.IsSuccess = false;
+              _response.Message = ex.Message;
             }
+            return _response;
         }
+        #endregion
 
+        public async Task<ResponseDto> ImportDucAsync()
+        {
+            try
+            {
+
+                DateTime startDate = DateTime.Today.AddDays(-1);
+                DateTime endDate = DateTime.Today;
+
+                //DateTime startDate = new DateTime(2025, 7, 13);   
+                //DateTime endDate = startDate.AddDays(1);
+                 
+                List<dcc_crud_log> objList = await _dbContext.dcc_crud_log
+                    .Where(x => x.Action_datetime >= startDate && x.Action_datetime < endDate)
+                    .ToListAsync(); 
+                //_response.Result = _mapper.Map<List<dcc_crud_log>>(objList);
+
+                if (objList.Count > 0) {
+
+                    const int batchSize = 1000;
+
+                        foreach (var batch in objList.Chunk(batchSize))
+                        {
+                        var entities = batch.Select(t => new DUC_DCC_Log
+                            {
+
+                            Group_name = t.Group_name,
+                            Username = t.Username,
+                            Action = t.Action,
+                            Action_date_time = t.Action_datetime,
+                            Bu = t.Bu,
+                            Detail = t.Detail,
+                            Days_after_action = t.Resign_after_action,
+                            Download_more_10_files_day = t.Is_over_10_file_per_day,
+                            Is_not_dcc = t.Is_not_dcc,
+                            Employee_resigning_within_one_month = t.Is_resigned_within_1_month,
+                            Event_type = t.Event_type,
+                            Position = t.Position,
+                            Resigned_date = t.Resigned_date,
+                            Unauthorized = t.Unauthorized,
+                            dcc_duc = "DCC",
+
+                        }).ToList();
+                        await _dbContext.AddRangeAsync(entities);
+                    }
+                    await _dbContext.SaveChangesAsync();
+                    _response.Message = _message.InsertMessage;
+                }
+
+            }
+            catch (Exception ex) {
+
+                _response.IsSuccess = false;
+                _response.Message = _message.an_error_occurred + ex.Message;
+            }
+            return _response;
+        }
 
 
     }

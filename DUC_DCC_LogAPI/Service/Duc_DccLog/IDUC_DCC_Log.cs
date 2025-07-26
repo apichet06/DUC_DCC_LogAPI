@@ -14,7 +14,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         Task<ResponseDto<FileDownloadDto>> ExportExcel(SearchDto request); 
         Task<byte[]> ExportExcelLog(SearchDto request);
         Task<byte[]> ExportExcelAccept(SearchDto request);
-        Task <ResponseDto> GetDataDUC(DUC_DCC_Log request);
+        Task<ResponseDto> GetDataDUC(DUC_DCC_Log request);
         Task<ResponseDto> GetDataDCC();
     }
 }
