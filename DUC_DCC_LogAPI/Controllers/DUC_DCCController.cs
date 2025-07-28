@@ -49,7 +49,7 @@ namespace DUC_DCC_LogAPI.Controllers
             return Ok(results);
         }
 
-        [HttpGet("ExportExcel")]
+        [HttpGet("ExportExcelDUCBas64")]
         public async Task<IActionResult> GetExportExcel([FromQuery] SearchDto request)
         {
             var fileData = await _DCC_Log.ExportExcel(request); 
@@ -57,8 +57,10 @@ namespace DUC_DCC_LogAPI.Controllers
             return Ok(fileData);
 
         }
+
+
         [HttpGet("ExportExcelLog")]
-        public async Task<IActionResult> GetExportExcelLog([FromQuery] SearchDto request)
+        public async Task<IActionResult> GetExportExcelDucLog([FromQuery] SearchDto request)
         {
             try
             {
@@ -66,7 +68,7 @@ namespace DUC_DCC_LogAPI.Controllers
                 return File(
                     excelBytes,
                     ContentTypeConfig.Xlsx,
-                    "reportLog.xlsx"
+                    "DUC_reportLog.xlsx"
                 );
             }
             catch (Exception ex) {
@@ -74,6 +76,26 @@ namespace DUC_DCC_LogAPI.Controllers
             }
              
         }
+
+        [HttpGet("ExportExcelDCCLog")]
+        public async Task<IActionResult> GetExportExcelDccLog([FromQuery] SearchDto request)
+        {
+            try
+            {
+                var excelBytes = await _DCC_Log.ExportExcelDccLog(request);
+                return File(
+                    excelBytes,
+                    ContentTypeConfig.Xlsx,
+                    "DCC_reportLog.xlsx"
+                );
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Failed to export Excel file: {ex.Message}");
+            }
+
+        }
+
 
         [HttpGet("ExportExcelLogAccept")]
         public async Task<IActionResult> GetExportExcelAccept([FromQuery] SearchDto request)

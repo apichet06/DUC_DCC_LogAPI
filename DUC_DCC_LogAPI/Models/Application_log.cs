@@ -2,9 +2,9 @@
 
 namespace DUC_DCC_LogAPI.Models
 {
-    public class DUC_DCC_Log
+    public class Application_log
     {
-      [Key]
+      
       public int Id { get; set; }
       public string? Group_name  { get; set; }
       public string? Username { get; set; }

@@ -40,17 +40,17 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             _httpClient = httpClient;
         }
 
-        public async Task<ResponseDto> GetDataDUC(DUC_DCC_Log request)
+        public async Task<ResponseDto> GetDataDUC(Application_log request)
         {
             try
             {
-                var data = await _httpClient.GetFromJsonAsync<List<DUC_DCC_Log>>(_url);
-                var dataInsert = data!.Select(a => new DUC_DCC_Log
+                var data = await _httpClient.GetFromJsonAsync<List<Application_log>>(_url);
+                var dataInsert = data!.Select(a => new Application_log
                 {
                     Group_name = a.Group_name,
                      
                 });
-                await _db.DUC_DCC_Log.AddRangeAsync(dataInsert);
+                await _db.Application_Log.AddRangeAsync(dataInsert);
                 var affectRows = await _db.SaveChangesAsync();
 
                  
@@ -68,14 +68,14 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         {
             try
             {
-                var data = await _httpClient.GetFromJsonAsync<List<DUC_DCC_Log>>(_url);
-                var dataInsert = data!.Select(a => new DUC_DCC_Log
+                var data = await _httpClient.GetFromJsonAsync<List<Application_log>>(_url);
+                var dataInsert = data!.Select(a => new Application_log
                 {
                     Group_name = a.Group_name,
 
 
                 });
-                await _db.DUC_DCC_Log.AddRangeAsync(dataInsert);
+                await _db.Application_Log.AddRangeAsync(dataInsert);
                 var affectRows = await _db.SaveChangesAsync();
                  
             }
@@ -94,7 +94,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             try
             {
 
-                IQueryable<DUC_DCC_Log> query = _db.DUC_DCC_Log.Where(x => x.Users_action == null);
+                IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_action == null);
 
                 if (request != null && request.Search != null && request.Search.Any())
                 {
@@ -127,7 +127,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 }
 
                 var obj = await query.ToListAsync();
-                var mappList = _mapper.Map<List<DUC_DCC_logDto>>(obj);
+                var mappList = _mapper.Map<List<Application_logDto>>(obj);
 
                 var filePath = Path.Combine(_env.ContentRootPath, "Files", "DUC_DCC_LogService.xlsx");
 
@@ -207,7 +207,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         #region || ExportExcelAccept || 
         public async Task<byte[]> ExportExcelAccept(SearchDto request)
         {
-            IQueryable<DUC_DCC_Log> query = _db.DUC_DCC_Log.Where(x => x.Users_action != null);
+            IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_action != null && x.dcc_duc == request.tapData);
 
             if (request != null && request.Search != null && request.Search.Any())
             {
@@ -240,9 +240,9 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             }
 
             var obj = await query.ToListAsync();
-            var mappList = _mapper.Map<List<DUC_DCC_logDto>>(obj);
-
-            var filePath = Path.Combine(_env.ContentRootPath, "Files", "reportDUC_DCC_Accept.xlsx");
+            var mappList = _mapper.Map<List<Application_logDto>>(obj);
+            var fileName = request.tapData == "DUC" ? "reportDUC_Accept.xlsx" : "reportDCC_Accept.xlsx";
+            var filePath = Path.Combine(_env.ContentRootPath, "Files", fileName );
 
             using var workbook = new XLWorkbook(filePath);
             var worksheet = workbook.Worksheet("Report");
@@ -269,15 +269,26 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 worksheet.Cell($"L{row}").Value = item.Unauthorized;
                 worksheet.Cell($"M{row}").Value = item.Download_more_10_files_day;
                 worksheet.Cell($"N{row}").Value = item.Employee_resigning_within_one_month;
-                worksheet.Cell($"O{row}").Value = item.Users_action;
-                worksheet.Cell($"P{row}").Value = item.User_action_date;
+                if (request.tapData == "DCC")
+                {
+                    worksheet.Cell($"O{row}").Value = item.Is_not_dcc;
+                    worksheet.Cell($"P{row}").Value = item.Users_action;
+                    worksheet.Cell($"Q{row}").Value = item.User_action_date;
+                }
+                else
+                {
+                    worksheet.Cell($"O{row}").Value = item.Users_action;
+                    worksheet.Cell($"P{row}").Value = item.User_action_date;
+                }
 
-                row++;
+
+                    row++;
             }
 
             // 3. Apply adjustments and styling only if new rows were added.
             var newlastRow = row - 1;
-            var range = worksheet.Range($"A3:P{newlastRow}");
+            var rowtapData = request.tapData == "DCC" ? "Q" : "P";
+            var range = worksheet.Range($"A3:{rowtapData}{newlastRow}");
 
             range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
             range.Style.Border.OutsideBorderColor = XLColor.Black;
@@ -297,7 +308,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         public async Task<byte[]> ExportExcelLog(SearchDto request)
         {
-            IQueryable<DUC_DCC_Log> query = _db.DUC_DCC_Log.Where(x => x.Users_action == null);
+            IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_action == null && x.dcc_duc == request.tapData);
 
             if (request != null && request.Search != null && request.Search.Any())
             {
@@ -330,9 +341,9 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             }
 
             var obj = await query.ToListAsync();
-            var mappList = _mapper.Map<List<DUC_DCC_logDto>>(obj);
-
-            var filePath = Path.Combine(_env.ContentRootPath, "Files", "reportDUC_DCC.xlsx");
+            var mappList = _mapper.Map<List<Application_logDto>>(obj);
+            var fileName = request.tapData == "DUC" ? "reportDUC.xlsx" : "reportDCC.xlsx";
+            var filePath = Path.Combine(_env.ContentRootPath, "Files", fileName);
 
             using var workbook = new XLWorkbook(filePath);
             var worksheet = workbook.Worksheet("Report");
@@ -359,13 +370,15 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 worksheet.Cell($"L{row}").Value = item.Unauthorized;
                 worksheet.Cell($"M{row}").Value = item.Download_more_10_files_day;
                 worksheet.Cell($"N{row}").Value = item.Employee_resigning_within_one_month;
-
+                if(request.tapData == "DCC")
+                    worksheet.Cell($"O{row}").Value = item.Is_not_dcc; 
                 row++;
             }
 
             // 3. Apply adjustments and styling only if new rows were added.
             var newlastRow = row - 1;
-            var range = worksheet.Range($"A3:N{newlastRow}");
+            var rowtapData = request.tapData == "DUC" ? "N" : "O"; // Determine the last column based on tapData
+            var range = worksheet.Range($"A3:{rowtapData}{newlastRow}");
 
                 range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
                 range.Style.Border.OutsideBorderColor = XLColor.Black;
@@ -378,11 +391,100 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             //return Task.FromResult(stream.ToArray());
             return stream.ToArray();
         }
+
+        #endregion
+
+        #region || ExportExcelDCCLog ||
+
+        public async Task<byte[]> ExportExcelDccLog(SearchDto request)
+        {
+            IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_action == null && x.dcc_duc == request.tapData);
+
+            if (request != null && request.Search != null && request.Search.Any())
+            {
+                string searchTerm = request.Search.ToLower();
+
+                query = query.Where(x =>
+                    x.Group_name!.ToLower().Contains(searchTerm) ||
+                    x.Username!.ToLower().Contains(searchTerm) ||
+                    x.Action!.ToLower().Contains(searchTerm) ||
+                    x.Detail!.ToLower().Contains(searchTerm) ||
+                    x.Bu!.ToLower().Contains(searchTerm) ||
+                    x.Position!.ToLower().Contains(searchTerm) ||
+                    x.Event_type!.ToLower().Contains(searchTerm) ||
+                    x.Unauthorized!.ToLower().Contains(searchTerm) ||
+                    x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
+                    x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
+                    x.Users_action!.ToLower().Contains(searchTerm));
+            }
+
+            if (request!.startDate.HasValue)
+            {
+                DateTime startDate = request.startDate.Value.Date; // เอาเฉพาะส่วนวันที่ (เวลา 00:00:00)
+                query = query.Where(x => x.Action_date_time >= startDate);
+            }
+
+            if (request.endDate.HasValue)
+            {
+                DateTime endDateExclusive = request.endDate.Value.Date.AddDays(0); // เอาวันถัดไปตอน 00:00:00
+                query = query.Where(x => x.Action_date_time < endDateExclusive);
+            }
+
+            var obj = await query.ToListAsync();
+            var mappList = _mapper.Map<List<Application_logDto>>(obj);
+
+            var filePath = Path.Combine(_env.ContentRootPath, "Files", "reportDCC.xlsx");
+
+            using var workbook = new XLWorkbook(filePath);
+            var worksheet = workbook.Worksheet("Report");
+
+
+            int autoId = 1;
+            int row = 3;
+
+            foreach (var item in mappList)
+            {
+                item.Id = autoId++;
+
+                worksheet.Cell($"A{row}").Value = item.Id;
+                worksheet.Cell($"B{row}").Value = item.Group_name;
+                worksheet.Cell($"C{row}").Value = item.Username;
+                worksheet.Cell($"D{row}").Value = item.Action;
+                worksheet.Cell($"E{row}").Value = item.Action_date_time;
+                worksheet.Cell($"F{row}").Value = item.Detail;
+                worksheet.Cell($"G{row}").Value = item.Bu;
+                worksheet.Cell($"H{row}").Value = item.Position;
+                worksheet.Cell($"I{row}").Value = item.Resigned_date;
+                worksheet.Cell($"J{row}").Value = item.Days_after_action;
+                worksheet.Cell($"K{row}").Value = item.Event_type;
+                worksheet.Cell($"L{row}").Value = item.Unauthorized;
+                worksheet.Cell($"M{row}").Value = item.Download_more_10_files_day;
+                worksheet.Cell($"N{row}").Value = item.Employee_resigning_within_one_month;
+                worksheet.Cell($"O{row}").Value = item.Is_not_dcc;
+
+                row++;
+            }
+
+            // 3. Apply adjustments and styling only if new rows were added.
+            var newlastRow = row - 1;
+            var range = worksheet.Range($"A3:N{newlastRow}");
+
+            range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            range.Style.Border.OutsideBorderColor = XLColor.Black;
+            range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            range.Style.Border.InsideBorderColor = XLColor.Black;
+
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            //return Task.FromResult(stream.ToArray());
+            return stream.ToArray();
+        }
         #endregion
 
         #region || ExportReportLog ||
 
-        private void ExportReportLog(List<DUC_DCC_logDto> dataList)
+        private void ExportReportLog(List<Application_logDto> dataList)
         {
             var filePath = Path.Combine(_env.ContentRootPath, "Files", "reportDUC_DCC.xlsx");
 
@@ -439,7 +541,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             try
             {
 
-                IQueryable<DUC_DCC_Log> query = _db.DUC_DCC_Log.Where(x=>x.Users_action == null && x.dcc_duc == request.tapData);
+                IQueryable<Application_log> query = _db.Application_Log.Where(x=>x.Users_action == null && x.dcc_duc == request.tapData);
 
                 if (request != null && request.Search != null && request.Search.Any())
                 {
@@ -473,7 +575,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 }
 
                 var obj = await query.ToListAsync();
-                var mappList = _mapper.Map<List<DUC_DCC_logDto>>(obj);
+                var mappList = _mapper.Map<List<Application_logDto>>(obj);
 
                  //ExportExcle(mappList);
                 _response.Result = mappList;
@@ -490,14 +592,14 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         #endregion
          
-        #region || GetSaveLogList ||
+        #region || GetSaveLog Accept ||
 
         public async Task<ResponseDto> GetSaveLogList(SearchDto request)
         {
             try
             {
 
-                IQueryable<DUC_DCC_Log> query = _db.DUC_DCC_Log.Where(x => x.Users_action != null);
+                IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_action != null && x.dcc_duc == request.tapData);
 
                 if (request != null && request.Search != null && request.Search.Any())
                 {
@@ -519,6 +621,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 }
 
 
+
                 if (request!.startDate.HasValue)
                 {
                     DateTime startDate = request.startDate.Value.Date; // เอาเฉพาะส่วนวันที่ (เวลา 00:00:00)
@@ -532,7 +635,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 }
 
 
-                IEnumerable<DUC_DCC_Log> obj = await query.ToListAsync();
+                IEnumerable<Application_log> obj = await query.ToListAsync();
                 IEnumerable<SaveDUC_DCC_logDto> mappDataList = _mapper.Map<IEnumerable<SaveDUC_DCC_logDto>>(obj);
 
                 _response.Result = mappDataList;
@@ -653,7 +756,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                                 ";
                 string filePath = Path.Combine(_env.ContentRootPath, "Files", "report.xlsx");
                 var message = new MailMessage();
-                message.From = new MailAddress(_smtpSettings.SenderEmail, _smtpSettings.SenderName);
+                message.From = new MailAddress(_smtpSettings.SenderEmail!, _smtpSettings.SenderName);
                 message.To.Add("apichets06@fabrinet.co.th");
                 message.Subject = "AutoMail";
                 message.Body = body;
@@ -695,7 +798,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 }
 
             
-                var logsToUpdate = await _db.DUC_DCC_Log
+                var logsToUpdate = await _db.Application_Log
                                             .Where(log => request.Id.Contains(log.Id))
                                             .ToListAsync();
 
@@ -732,7 +835,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         #endregion
 
         #region || Export Excel ||
-        private void ExportExcle(List<DUC_DCC_logDto> dataList)
+        private void ExportExcle(List<Application_logDto> dataList)
         {
             var filePath = Path.Combine(_env.ContentRootPath, "Files", "report.xlsx");
 

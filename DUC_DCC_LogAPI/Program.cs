@@ -37,8 +37,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     };
 });
 
+  
+
 builder.Services.Configure<ApiSettings>(
-    builder.Configuration.GetSection("ApiSettings"));
+builder.Configuration.GetSection("ApiSettings"));
 
 
 
@@ -72,10 +74,13 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = string.Empty;
 });
 
-app.UseCors(builder => builder
-    .AllowAnyOrigin()
-    .AllowAnyMethod()
-    .AllowAnyHeader());
+app.UseCors(policy =>
+{
+    policy.WithOrigins("http://localhost:5173") // Frontend origin
+          .AllowAnyHeader()
+          .AllowAnyMethod()
+          .AllowCredentials();
+});
 
 app.UseHttpsRedirection();
 app.UseAuthentication();

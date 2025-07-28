@@ -11,7 +11,7 @@ namespace DUC_DCC_LogAPI.Controllers
     {
         private readonly IAuthenService _authen = authen;
         [HttpPost]
-        public async Task<IActionResult> Login([FromForm] AuthenDto request)
+        public async Task<IActionResult> Login([FromBody] AuthenDto request)
         { 
             return Ok(await _authen.Authen(request));
         }
@@ -24,10 +24,10 @@ namespace DUC_DCC_LogAPI.Controllers
             // นำ Token ที่ได้จาก Service มาใส่ใน Cookie
             Response.Cookies.Append("authToken", authResult.token!, new CookieOptions
             {
-                HttpOnly = true,
+                HttpOnly = false,
                 Secure = true, // ควรเป็น true เมื่อ Deploy จริง (ใช้ HTTPS)
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddMinutes(60)
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.Now.AddDays(6)
             });
 
             //var userJson = System.Text.Json.JsonSerializer.Serialize(authResult.User);
@@ -38,15 +38,17 @@ namespace DUC_DCC_LogAPI.Controllers
             //    SameSite = SameSiteMode.Strict,
             //    Expires = DateTime.UtcNow.AddMinutes(60)
             //}); 
-            return Ok(authResult);
-            //return Ok(new
-            //{
-            //    IsSuccess = true, 
-            //    Token = authResult.token,
-            //    Message = authResult.Message
-            //});
+             //return Redirect("http://localhost:5173/reportlog");
+            return Ok(new
+            {
+                IsSuccess = true,
+                Token = authResult.token,
+                Message = authResult.Message
+            });
         }
 
 
+
+      
     }
 }

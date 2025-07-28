@@ -85,46 +85,35 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
 
         public async Task<ResponseAuthen> AuthenticateUserAsync(AuthenDto authen)
         {
-            try
+            return await Task.Run(() =>
             {
                 var user = new { username = authen.Username };
                 var claims = new[]
-                   {
-                    new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]!),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
-                    new Claim("UserId", user.username!)
-                };
+                {
+            new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]!),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
+            new Claim("UserId", user.username!)
+        };
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["jwt:key"]!));
-                var singIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
                 var token = new JwtSecurityToken(
                     _configuration["jwt:Issuer"],
                     _configuration["jwt:Audience"],
                     claims,
                     expires: DateTime.UtcNow.AddMinutes(60),
-                    signingCredentials: singIn
+                    signingCredentials: signIn
                 );
 
                 var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-                //return new ResponseAuthen
-                //{
-                //    IsSuccess = true,
-                //    Message = "Login successful.",
-                //    token = tokenString // ส่ง Token กลับไปด้วย
-                //};
+
                 _resAuthen.Message = _message.LoginSuccess;
                 _resAuthen.token = tokenString;
 
-            }
-            catch (Exception ex) {
-
-                _response.IsSuccess = false;
-                _response.Message = _message.an_error_occurred + ex.Message;
-            }
-
-            return _resAuthen;
- 
-           
+                return _resAuthen;
+            });
         }
+
+
     }
 }

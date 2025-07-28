@@ -12,8 +12,8 @@ namespace DUC_DCC_LogAPI
         {
             var mappingConfig = new MapperConfiguration(config =>
                 {
-                    config.CreateMap<DUC_DCC_Log, DUC_DCC_logDto>();
-                    config.CreateMap<DUC_DCC_Log, SaveDUC_DCC_logDto>();
+                    config.CreateMap<Application_log, Application_logDto>();
+                    config.CreateMap<Application_log, SaveDUC_DCC_logDto>();
                     config.CreateMap<Users_Permission,UserResposeDto>();
                 });
             return mappingConfig;

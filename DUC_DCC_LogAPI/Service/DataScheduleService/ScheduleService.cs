@@ -56,7 +56,7 @@ namespace DUC_DCC_LogAPI.Service.DccService
 
                     foreach (var batch in todos.Chunk(batchSize))
                     {
-                        var entities = batch.Select(t => new DUC_DCC_Log
+                        var entities = batch.Select(t => new Application_log
                         {
                             Group_name = t.Group_name,
                             Username = t.Username,
@@ -116,7 +116,7 @@ namespace DUC_DCC_LogAPI.Service.DccService
 
                         foreach (var batch in objList.Chunk(batchSize))
                         {
-                        var entities = batch.Select(t => new DUC_DCC_Log
+                        var entities = batch.Select(t => new Application_log
                             {
 
                             Group_name = t.Group_name,

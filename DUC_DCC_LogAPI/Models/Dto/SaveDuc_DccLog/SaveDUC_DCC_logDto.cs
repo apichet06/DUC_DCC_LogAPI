@@ -17,6 +17,7 @@
         public string? Download_more_10_files_day { get; set; }
         public string? Employee_resigning_within_one_month { get; set; }
         public string? Users_action { get; set; }
+        public string? Is_not_dcc { get; set; }
         public DateTime? User_action_date { get; set; }
     }
 }
