@@ -1,18 +1,20 @@
 ﻿using AutoMapper;
-using DUC_DCC_LogAPI.Models.Dto;
-using DUC_DCC_LogAPI.Models.Dtos;
 using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Wordprocessing;
 using DUC_DCC_LogAPI.Data;
 using DUC_DCC_LogAPI.Models; 
+using DUC_DCC_LogAPI.Models.Dto;
 using DUC_DCC_LogAPI.Models.Dto.Duc_DccLog;
 using DUC_DCC_LogAPI.Models.Dto.SaveDuc_DccLog; 
+using DUC_DCC_LogAPI.Models.Dtos;
 using Microsoft.EntityFrameworkCore;
  
 
 using Microsoft.Extensions.Options; 
 using System.Net; 
 using System.Net.Mail;
+using System.Text;
 using static DUC_DCC_LogAPI.Constant.Constants;
 
 namespace DUC_DCC_LogAPI.Service.Duc_DccLog
@@ -25,11 +27,12 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         private readonly IMapper _mapper;
         private readonly EmailSettings _smtpSettings;
         private readonly IWebHostEnvironment _env;
+  
         private readonly HttpClient _httpClient;
         private readonly string _url = "https://jsonplaceholder.typicode.com/todos";
 
 
-        public DUC_DCC_LogService(AppDbContext dbContext, IMapper mapper, IOptions<EmailSettings> emailSettings, IWebHostEnvironment env , HttpClient httpClient )
+        public DUC_DCC_LogService(AppDbContext dbContext, IMapper mapper, IOptions<EmailSettings> emailSettings, IWebHostEnvironment env , HttpClient httpClient  )
         {
             _db = dbContext;
             _mapper = mapper;
@@ -38,6 +41,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             _smtpSettings = emailSettings.Value;
             _env = env;
             _httpClient = httpClient;
+             
         }
 
         public async Task<ResponseDto> GetDataDUC(Application_log request)
@@ -71,9 +75,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 var data = await _httpClient.GetFromJsonAsync<List<Application_log>>(_url);
                 var dataInsert = data!.Select(a => new Application_log
                 {
-                    Group_name = a.Group_name,
-
-
+                    Group_name = a.Group_name, 
                 });
                 await _db.Application_Log.AddRangeAsync(dataInsert);
                 var affectRows = await _db.SaveChangesAsync();
@@ -89,120 +91,122 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         }
 
         #region || ExportExcel Form base64 ||
-        public async Task<ResponseDto<FileDownloadDto>> ExportExcel(SearchDto request)
-        {
-            try
-            {
+        //public async Task<ResponseDto<FileDownloadDto>> ExportExcel(SearchDto request)
+        //{
+        //    try
+        //    {
 
-                IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_action == null);
+        //        IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_action == null);
 
-                if (request != null && request.Search != null && request.Search.Any())
-                {
-                    string searchTerm = request.Search.ToLower();
+        //        if (request != null && request.Search != null && request.Search.Any())
+        //        {
+        //            string searchTerm = request.Search.ToLower();
 
-                    query = query.Where(x =>
-                        x.Group_name!.ToLower().Contains(searchTerm) ||
-                        x.Username!.ToLower().Contains(searchTerm) ||
-                        x.Action!.ToLower().Contains(searchTerm) ||
-                        x.Detail!.ToLower().Contains(searchTerm) ||
-                        x.Bu!.ToLower().Contains(searchTerm) ||
-                        x.Position!.ToLower().Contains(searchTerm) ||
-                        x.Event_type!.ToLower().Contains(searchTerm) ||
-                        x.Unauthorized!.ToLower().Contains(searchTerm) ||
-                        x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
-                        x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-                        x.Users_action!.ToLower().Contains(searchTerm));
-                }
+        //            query = query.Where(x =>
+        //                x.Group_name!.ToLower().Contains(searchTerm) ||
+        //                x.Username!.ToLower().Contains(searchTerm) ||
+        //                x.Action!.ToLower().Contains(searchTerm) ||
+        //                x.Detail!.ToLower().Contains(searchTerm) ||
+        //                x.Bu!.ToLower().Contains(searchTerm) ||
+        //                x.Position!.ToLower().Contains(searchTerm) ||
+        //                x.Event_type!.ToLower().Contains(searchTerm) ||
+        //                x.Unauthorized!.ToLower().Contains(searchTerm) ||
+        //                x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
+        //                x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
+        //                x.Users_action!.ToLower().Contains(searchTerm));
+        //        }
 
-                if (request!.startDate.HasValue)
-                {
-                    DateTime startDate = request.startDate.Value.Date; // เอาเฉพาะส่วนวันที่ (เวลา 00:00:00)
-                    query = query.Where(x => x.Action_date_time >= startDate);
-                }
+        //        if (request!.startDate.HasValue)
+        //        {
+        //            DateTime startDate = request.startDate.Value.Date; // เอาเฉพาะส่วนวันที่ (เวลา 00:00:00)
+        //            query = query.Where(x => x.Action_date_time >= startDate);
+        //        }
 
-                if (request.endDate.HasValue)
-                {
-                    DateTime endDateExclusive = request.endDate.Value.Date.AddDays(1); // เอาวันถัดไปตอน 00:00:00
-                    query = query.Where(x => x.Action_date_time < endDateExclusive);
-                }
+        //        if (request.endDate.HasValue)
+        //        {
+        //            DateTime endDateExclusive = request.endDate.Value.Date.AddDays(1); // เอาวันถัดไปตอน 00:00:00
+        //            query = query.Where(x => x.Action_date_time < endDateExclusive);
+        //        }
 
-                var obj = await query.ToListAsync();
-                var mappList = _mapper.Map<List<Application_logDto>>(obj);
+        //        var obj = await query.ToListAsync();
+        //        var mappList = _mapper.Map<List<Application_logDto>>(obj);
 
-                var filePath = Path.Combine(_env.ContentRootPath, "Files", "DUC_DCC_LogService.xlsx");
+        //        var filePath = Path.Combine(_env.ContentRootPath, "Files", "DUC_DCC_LogService.xlsx");
 
-                using var workbook = new XLWorkbook();
-                var worksheet = workbook.Worksheets.Add("Report");
-                int row = 3;
-                int autoId = 1;
+        //        using var workbook = new XLWorkbook();
+        //        var worksheet = workbook.Worksheets.Add("Report");
+        //        int row = 3;
+        //        int autoId = 1;
                  
 
-                foreach (var item in mappList)
-                {
+        //        foreach (var item in mappList)
+        //        {
 
-                    item.Id = autoId++;
+        //            item.Id = autoId++;
 
-                    worksheet.Cell($"A{row}").Value = item.Id;
-                    worksheet.Cell($"B{row}").Value = item.Group_name;
-                    worksheet.Cell($"C{row}").Value = item.Username;
-                    worksheet.Cell($"D{row}").Value = item.Action;
-                    worksheet.Cell($"E{row}").Value = item.Action_date_time;
-                    worksheet.Cell($"F{row}").Value = item.Detail;
-                    worksheet.Cell($"G{row}").Value = item.Bu;
-                    worksheet.Cell($"H{row}").Value = item.Position;
-                    worksheet.Cell($"I{row}").Value = item.Resigned_date;
-                    worksheet.Cell($"J{row}").Value = item.Days_after_action;
-                    worksheet.Cell($"K{row}").Value = item.Event_type;
-                    worksheet.Cell($"L{row}").Value = item.Unauthorized;
-                    worksheet.Cell($"M{row}").Value = item.Download_more_10_files_day;
-                    worksheet.Cell($"N{row}").Value = item.Employee_resigning_within_one_month;
+        //            worksheet.Cell($"A{row}").Value = item.Id;
+        //            worksheet.Cell($"B{row}").Value = item.Group_name;
+        //            worksheet.Cell($"C{row}").Value = item.Username;
+        //            worksheet.Cell($"D{row}").Value = item.Action;
+        //            worksheet.Cell($"E{row}").Value = item.Action_date_time;
+        //            worksheet.Cell($"F{row}").Value = item.Detail;
+        //            worksheet.Cell($"G{row}").Value = item.Bu;
+        //            worksheet.Cell($"H{row}").Value = item.Position;
+        //            worksheet.Cell($"I{row}").Value = item.Resigned_date;
+        //            worksheet.Cell($"J{row}").Value = item.Days_after_action;
+        //            worksheet.Cell($"K{row}").Value = item.Event_type;
+        //            worksheet.Cell($"L{row}").Value = item.Unauthorized;
+        //            worksheet.Cell($"M{row}").Value = item.Download_more_10_files_day;
+        //            worksheet.Cell($"N{row}").Value = item.Employee_resigning_within_one_month;
 
-                    row++;
-                }
-                worksheet.Columns().AdjustToContents();
-                var newlastRow = row - 1;
-                var range = worksheet.Range($"A3:N{newlastRow}");
+        //            row++;
+        //        }
+        //        worksheet.Columns().AdjustToContents();
+        //        var newlastRow = row - 1;
+        //        var range = worksheet.Range($"A3:N{newlastRow}");
 
-                range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                range.Style.Border.OutsideBorderColor = XLColor.Black;
-                range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                range.Style.Border.InsideBorderColor = XLColor.Black;
+        //        range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+        //        range.Style.Border.OutsideBorderColor = XLColor.Black;
+        //        range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+        //        range.Style.Border.InsideBorderColor = XLColor.Black;
 
         
-                using (var stream = new MemoryStream())
-                {
-                    workbook.SaveAs(stream);
-                    byte[] content = stream.ToArray();
+        //        using (var stream = new MemoryStream())
+        //        {
+        //            workbook.SaveAs(stream);
+        //            byte[] content = stream.ToArray();
 
-                    return new ResponseDto<FileDownloadDto>()
-                    {
-                        IsSuccess = true,
-                        Message = "Success",
-                        Data = new FileDownloadDto()
-                        {
-                            Content = content,
-                            FileName = $"รายการงาน.xlsx",
-                            ContentType = ContentTypeConfig.Xlsx,
-                        },
-                        Status = HttpStatusCode.OK
-                    };
-                }
+        //            return new ResponseDto<FileDownloadDto>()
+        //            {
+        //                IsSuccess = true,
+        //                Message = "Success",
+        //                Data = new FileDownloadDto()
+        //                {
+        //                    Content = content,
+        //                    FileName = $"รายการงาน.xlsx",
+        //                    ContentType = ContentTypeConfig.Xlsx,
+        //                },
+        //                Status = HttpStatusCode.OK
+        //            };
+        //        }
 
 
-            }
-            catch (Exception ex)
-            {
-                // 5. แก้ไขการ Return ค่าใน Catch Block
-                return new ResponseDto<FileDownloadDto>()
-                {
-                    IsSuccess = false,
-                    Message = "An error occurred: " + ex.Message,
-                    Data = null,
-                    Status = HttpStatusCode.InternalServerError
-                };
-            }
-        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // 5. แก้ไขการ Return ค่าใน Catch Block
+        //        return new ResponseDto<FileDownloadDto>()
+        //        {
+        //            IsSuccess = false,
+        //            Message = "An error occurred: " + ex.Message,
+        //            Data = null,
+        //            Status = HttpStatusCode.InternalServerError
+        //        };
+        //    }
+        //}
         #endregion
+
+
 
         #region || ExportExcelAccept || 
         public async Task<byte[]> ExportExcelAccept(SearchDto request)
@@ -396,90 +400,90 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         #region || ExportExcelDCCLog ||
 
-        public async Task<byte[]> ExportExcelDccLog(SearchDto request)
-        {
-            IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_action == null && x.dcc_duc == request.tapData);
+        //public async Task<byte[]> ExportExcelDccLog(SearchDto request)
+        //{
+        //    IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_action == null && x.dcc_duc == request.tapData);
 
-            if (request != null && request.Search != null && request.Search.Any())
-            {
-                string searchTerm = request.Search.ToLower();
+        //    if (request != null && request.Search != null && request.Search.Any())
+        //    {
+        //        string searchTerm = request.Search.ToLower();
 
-                query = query.Where(x =>
-                    x.Group_name!.ToLower().Contains(searchTerm) ||
-                    x.Username!.ToLower().Contains(searchTerm) ||
-                    x.Action!.ToLower().Contains(searchTerm) ||
-                    x.Detail!.ToLower().Contains(searchTerm) ||
-                    x.Bu!.ToLower().Contains(searchTerm) ||
-                    x.Position!.ToLower().Contains(searchTerm) ||
-                    x.Event_type!.ToLower().Contains(searchTerm) ||
-                    x.Unauthorized!.ToLower().Contains(searchTerm) ||
-                    x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
-                    x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-                    x.Users_action!.ToLower().Contains(searchTerm));
-            }
+        //        query = query.Where(x =>
+        //            x.Group_name!.ToLower().Contains(searchTerm) ||
+        //            x.Username!.ToLower().Contains(searchTerm) ||
+        //            x.Action!.ToLower().Contains(searchTerm) ||
+        //            x.Detail!.ToLower().Contains(searchTerm) ||
+        //            x.Bu!.ToLower().Contains(searchTerm) ||
+        //            x.Position!.ToLower().Contains(searchTerm) ||
+        //            x.Event_type!.ToLower().Contains(searchTerm) ||
+        //            x.Unauthorized!.ToLower().Contains(searchTerm) ||
+        //            x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
+        //            x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
+        //            x.Users_action!.ToLower().Contains(searchTerm));
+        //    }
 
-            if (request!.startDate.HasValue)
-            {
-                DateTime startDate = request.startDate.Value.Date; // เอาเฉพาะส่วนวันที่ (เวลา 00:00:00)
-                query = query.Where(x => x.Action_date_time >= startDate);
-            }
+        //    if (request!.startDate.HasValue)
+        //    {
+        //        DateTime startDate = request.startDate.Value.Date; // เอาเฉพาะส่วนวันที่ (เวลา 00:00:00)
+        //        query = query.Where(x => x.Action_date_time >= startDate);
+        //    }
 
-            if (request.endDate.HasValue)
-            {
-                DateTime endDateExclusive = request.endDate.Value.Date.AddDays(0); // เอาวันถัดไปตอน 00:00:00
-                query = query.Where(x => x.Action_date_time < endDateExclusive);
-            }
+        //    if (request.endDate.HasValue)
+        //    {
+        //        DateTime endDateExclusive = request.endDate.Value.Date.AddDays(0); // เอาวันถัดไปตอน 00:00:00
+        //        query = query.Where(x => x.Action_date_time < endDateExclusive);
+        //    }
 
-            var obj = await query.ToListAsync();
-            var mappList = _mapper.Map<List<Application_logDto>>(obj);
+        //    var obj = await query.ToListAsync();
+        //    var mappList = _mapper.Map<List<Application_logDto>>(obj);
 
-            var filePath = Path.Combine(_env.ContentRootPath, "Files", "reportDCC.xlsx");
+        //    var filePath = Path.Combine(_env.ContentRootPath, "Files", "reportDCC.xlsx");
 
-            using var workbook = new XLWorkbook(filePath);
-            var worksheet = workbook.Worksheet("Report");
-
-
-            int autoId = 1;
-            int row = 3;
-
-            foreach (var item in mappList)
-            {
-                item.Id = autoId++;
-
-                worksheet.Cell($"A{row}").Value = item.Id;
-                worksheet.Cell($"B{row}").Value = item.Group_name;
-                worksheet.Cell($"C{row}").Value = item.Username;
-                worksheet.Cell($"D{row}").Value = item.Action;
-                worksheet.Cell($"E{row}").Value = item.Action_date_time;
-                worksheet.Cell($"F{row}").Value = item.Detail;
-                worksheet.Cell($"G{row}").Value = item.Bu;
-                worksheet.Cell($"H{row}").Value = item.Position;
-                worksheet.Cell($"I{row}").Value = item.Resigned_date;
-                worksheet.Cell($"J{row}").Value = item.Days_after_action;
-                worksheet.Cell($"K{row}").Value = item.Event_type;
-                worksheet.Cell($"L{row}").Value = item.Unauthorized;
-                worksheet.Cell($"M{row}").Value = item.Download_more_10_files_day;
-                worksheet.Cell($"N{row}").Value = item.Employee_resigning_within_one_month;
-                worksheet.Cell($"O{row}").Value = item.Is_not_dcc;
-
-                row++;
-            }
-
-            // 3. Apply adjustments and styling only if new rows were added.
-            var newlastRow = row - 1;
-            var range = worksheet.Range($"A3:N{newlastRow}");
-
-            range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-            range.Style.Border.OutsideBorderColor = XLColor.Black;
-            range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-            range.Style.Border.InsideBorderColor = XLColor.Black;
+        //    using var workbook = new XLWorkbook(filePath);
+        //    var worksheet = workbook.Worksheet("Report");
 
 
-            using var stream = new MemoryStream();
-            workbook.SaveAs(stream);
-            //return Task.FromResult(stream.ToArray());
-            return stream.ToArray();
-        }
+        //    int autoId = 1;
+        //    int row = 3;
+
+        //    foreach (var item in mappList)
+        //    {
+        //        item.Id = autoId++;
+
+        //        worksheet.Cell($"A{row}").Value = item.Id;
+        //        worksheet.Cell($"B{row}").Value = item.Group_name;
+        //        worksheet.Cell($"C{row}").Value = item.Username;
+        //        worksheet.Cell($"D{row}").Value = item.Action;
+        //        worksheet.Cell($"E{row}").Value = item.Action_date_time;
+        //        worksheet.Cell($"F{row}").Value = item.Detail;
+        //        worksheet.Cell($"G{row}").Value = item.Bu;
+        //        worksheet.Cell($"H{row}").Value = item.Position;
+        //        worksheet.Cell($"I{row}").Value = item.Resigned_date;
+        //        worksheet.Cell($"J{row}").Value = item.Days_after_action;
+        //        worksheet.Cell($"K{row}").Value = item.Event_type;
+        //        worksheet.Cell($"L{row}").Value = item.Unauthorized;
+        //        worksheet.Cell($"M{row}").Value = item.Download_more_10_files_day;
+        //        worksheet.Cell($"N{row}").Value = item.Employee_resigning_within_one_month;
+        //        worksheet.Cell($"O{row}").Value = item.Is_not_dcc;
+
+        //        row++;
+        //    }
+
+        //    // 3. Apply adjustments and styling only if new rows were added.
+        //    var newlastRow = row - 1;
+        //    var range = worksheet.Range($"A3:N{newlastRow}");
+
+        //    range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+        //    range.Style.Border.OutsideBorderColor = XLColor.Black;
+        //    range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+        //    range.Style.Border.InsideBorderColor = XLColor.Black;
+
+
+        //    using var stream = new MemoryStream();
+        //    workbook.SaveAs(stream);
+        //    //return Task.FromResult(stream.ToArray());
+        //    return stream.ToArray();
+        //}
         #endregion
 
         #region || ExportReportLog ||
@@ -656,119 +660,151 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         {
             try
             {
-  
-                var body = $@"
+      
 
-                                                <!DOCTYPE html>
-                                                <html>
-                                                <head>
-                                                <style>
-                                                #customers {{
-                                                  font-family: Arial, Helvetica, sans-serif;
-                                                  border-collapse: collapse;
-                                                  width: 100%;
-                                                }}
+                DateTime startDate = new DateTime(2025, 7, 13);
+                DateTime endDate = startDate.AddDays(1);
 
-                                                #customers td, #customers th {{
-                                                  border: 1px solid #ddd;
-                                                  padding: 8px;
-                                                }}
+                List<Application_log> objDucList = await _db.Application_Log
+                    .Where(x => x.Action_date_time >= startDate && x.Action_date_time < endDate && x.dcc_duc == "DUC")
+                    .ToListAsync();
+                var mappDucList = _mapper.Map<List<Application_logDto>>(objDucList);
 
-                                                #customers tr:nth-child(even){{background-color: #f2f2f2;}}
+                  ExportExcleDucSendMail(mappDucList);
 
-                                                #customers tr:hover {{background-color: #ddd;}}
+                List<Application_log> objDccList = await _db.Application_Log
+                 .Where(x => x.Action_date_time >= startDate && x.Action_date_time < endDate && x.dcc_duc == "DCC")
+                 .ToListAsync();
+                var mappDccList = _mapper.Map<List<Application_logDto>>(objDccList);
 
-                                                #customers th {{
-                                                  padding-top: 12px;
-                                                  padding-bottom: 12px;
-                                                  text-align: left;
-                                                  background-color: #04AA6D;
-                                                  color: white;
-                                                }}
-                                                </style>
-                                                </head>
-                                                <body>
+                ExportExcleDccSendMail(mappDccList);
 
-                                                <h1>DCC & DUC Report</h1>
 
-                                                <table id=""customers"">
-                                                  <tr>
-                                                    <th>GROUP NAME</th>
-                                                    <th>USERNAME</th>
-                                                    <th>ACTION</th>
-                                                    <th>ACTION DATE/TIME</th>
-                                                    <th>DETAIL</th>
-                                                    <th>BU</th>
-                                                    <th>POSITION</th>
-                                                    <th>RESIGNED DATE</th>
-                                                    <th>DAYS AFTER ACTION</th>
-                                                    <th>Event type</th>
-                                                    <th>Unauthorized</th>
-                                                    <th>Download more 10 files per day</th>
-                                                    <th>Employee resigning within one month</th> 
-                                                  </tr>
-                                                  <tr>
-                                                    <td>CB_CISCO_OTBU</td>
-                                                    <td>Maria Anders</td>
-                                                    <td>tw@twengspecialist.com</td>
-                                                    <td>Download</td>
-                                                    <td>2025-01-04 08:51:56</td>   <td>CB_CISCO_OTBU/Supplier_Cisco_OTBU/TW_Engineering/ACE packaging.zip</td>
-                                                    <td>Germany</td>
-                                                    <td>Germany</td>
-                                                    <td>Germany</td>
-                                                    <td>Usual Event</td>
-                                                    <td>Germany</td>
-                                                    <td>Germany</td>
-                                                    <td>Germany</td>
-                                                  </tr>
-                                                  <tr>
-                                                    <td>CB_CISCO_OTBU</td>
-                                                    <td>Maria Anders</td>
-                                                    <td>tw@twengspecialist.com</td>
-                                                    <td>Download</td>
-                                                    <td>2025-01-04 08:51:56</td>   <td>CB_CISCO_OTBU/Supplier_Cisco_OTBU/TW_Engineering/ACE packaging.zip</td>
-                                                    <td>Germany</td>
-                                                    <td>Germany</td>
-                                                    <td>Germany</td>
-                                                    <td>Usual Event</td>
-                                                    <td>Germany</td>
-                                                    <td>Germany</td>
-                                                    <td>Germany</td>
-                                                  </tr>
-                                                  <tr>
-                                                    <td>CB_CISCO_OTBU</td>
-                                                    <td>Maria Anders</td>
-                                                    <td>tw@twengspecialist.com</td>
-                                                    <td>Download</td>
-                                                    <td>2025-01-04 08:51:56</td>   <td>CB_CISCO_OTBU/Supplier_Cisco_OTBU/TW_Engineering/ACE packaging.zip</td>
-                                                    <td>Germany</td>
-                                                    <td>Germany</td>
-                                                    <td>Germany</td>
-                                                    <td>Usual Event</td>
-                                                    <td>Germany</td>
-                                                    <td>Germany</td>
-                                                    <td>Germany</td>
-                                                  </tr> 
-                                                </table> 
-                                                </body>
-                                                </html> 
+                var sb = new StringBuilder();
 
-                                                ";
-                string filePath = Path.Combine(_env.ContentRootPath, "Files", "report.xlsx");
+                sb.AppendLine(@"<!DOCTYPE html>
+                                <html>
+                                <head>
+                                <style>
+                                #customers {
+                                  font-family: Arial, Helvetica, sans-serif;
+                                  border-collapse: collapse;
+                                  width: 100%;
+                                }
+
+                                #customers td, #customers th {
+                                  border: 1px solid #ddd;
+                                  padding: 8px;
+                                }
+
+                                #customers tr:nth-child(even) {background-color: #f2f2f2;}
+
+                                #customers tr:hover {background-color: #ddd;}
+
+                                #customers th {
+                                  padding-top: 12px;
+                                  padding-bottom: 12px;
+                                  text-align: left;
+                                  background-color: #04AA6D;
+                                  color: white;
+                                }
+                                </style>
+                                </head>
+                                <body>");
+
+                sb.AppendLine("<h1>DUC Report</h1>");
+                sb.AppendLine(@"<table id=""customers"">
+                    <tr>
+                      <th>NO</th>
+                      <th>GROUP NAME</th>
+                      <th>USERNAME</th> 
+                      <th>ACTION DATE/TIME</th>
+                      <th>DETAIL</th>
+                      <th>BU</th>
+                      <th>POSITION</th>
+                      <th>RESIGNED DATE</th>
+                      <th>DAYS AFTER ACTION</th>
+                      <th>Event type</th> 
+                    </tr>");
+
+                int ducIndex = 1;
+                foreach (var log in objDucList)
+                {
+                    sb.AppendLine($@"
+                        <tr>
+                          <td>{ducIndex++}</td>
+                          <td>{log.Group_name}</td>
+                          <td>{log.Username}</td>
+                          <td>{log.Action_date_time:yyyy-MM-dd HH:mm:ss}</td>
+                          <td>{log.Detail}</td>
+                          <td>{log.Bu}</td>
+                          <td>{log.Position}</td>
+                          <td>{(log.Resigned_date.HasValue ? log.Resigned_date.Value.ToString("yyyy-MM-dd") : "")}</td>
+                          <td>{(log.Days_after_action)}</td>
+                          <td>{log.Event_type}</td>
+                        </tr>");
+                }
+
+                sb.AppendLine("</table>");
+
+                sb.AppendLine("<h1>DCC Report</h1>");
+                sb.AppendLine(@"<table id=""customers"">
+                    <tr>
+                      <th>NO</th>
+                      <th>GROUP NAME</th>
+                      <th>USERNAME</th> 
+                      <th>ACTION DATE/TIME</th>
+                      <th>DETAIL</th>
+                      <th>BU</th>
+                      <th>POSITION</th>
+                      <th>RESIGNED DATE</th>
+                      <th>DAYS AFTER ACTION</th>
+                      <th>Event type</th> 
+                    </tr>");
+
+                                int dccIndex = 1;
+                        foreach (var log in objDccList)
+                        { 
+                                sb.AppendLine($@"
+                                <tr>
+                                  <td>{dccIndex++}</td>
+                                  <td>{log.Group_name}</td>
+                                  <td>{log.Username}</td>
+                                  <td>{log.Action_date_time:yyyy-MM-dd HH:mm:ss}</td>
+                                  <td>{log.Detail}</td>
+                                  <td>{log.Bu}</td>
+                                  <td>{log.Position}</td>
+                                  <td>{(log.Resigned_date.HasValue ? log.Resigned_date.Value.ToString("yyyy-MM-dd") : "")}</td>
+                                  <td>{log.Days_after_action}</td>
+                                  <td>{log.Event_type}</td>
+                                </tr>");
+                         
+                }
+            
+
+                sb.AppendLine("</table>");
+                sb.AppendLine("</body></html>");
+
+                string body = sb.ToString();
+
+                string filePathDuc = Path.Combine(_env.ContentRootPath, "Files", "reportDUCSendMail.xlsx");
+                string filePathDcc = Path.Combine(_env.ContentRootPath, "Files", "reportDCCSendMail.xlsx");
                 var message = new MailMessage();
                 message.From = new MailAddress(_smtpSettings.SenderEmail!, _smtpSettings.SenderName);
-                message.To.Add("apichets06@fabrinet.co.th");
+                message.To.Add("apichet06@gmail.com");
                 message.Subject = "AutoMail";
                 message.Body = body;
-                message.IsBodyHtml = true;
-                Attachment attachment = new Attachment(filePath);
-                message.Attachments.Add(attachment);
+                message.IsBodyHtml = true; 
+                message.Attachments.Add(new Attachment(filePathDuc));
+                message.Attachments.Add(new Attachment(filePathDcc));
+         
 
-                using (var client = new SmtpClient(_smtpSettings.SmtpServer))
+                using (var client = new SmtpClient(_smtpSettings.SmtpServer,_smtpSettings.SmtpPort))
                 {
                     client.EnableSsl = true;
-                    client.UseDefaultCredentials = true; // สำคัญ
-                    //client.Credentials = new NetworkCredential(_smtpSettings.Username, _smtpSettings.Password);
+                    //client.UseDefaultCredentials = true; // สำคัญ
+                    client.UseDefaultCredentials = false;
+                    client.Credentials = new NetworkCredential(_smtpSettings.Username, _smtpSettings.Password); //ถ้าเป็นระบบภายในไม่ต้องมีการยืนยันตัวตน รหัสผ่าน
                     await client.SendMailAsync(message);
                 }
 
@@ -835,9 +871,9 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         #endregion
 
         #region || Export Excel ||
-        private void ExportExcle(List<Application_logDto> dataList)
+        private  void  ExportExcleDucSendMail(List<Application_logDto> dataList)
         {
-            var filePath = Path.Combine(_env.ContentRootPath, "Files", "report.xlsx");
+            var filePath = Path.Combine(_env.ContentRootPath, "Files", "reportDUCSendMail.xlsx");
 
             using var workbook = new XLWorkbook(filePath);
             var worksheet = workbook.Worksheet("Report");
@@ -883,7 +919,53 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             workbook.Save();
         }
 
-       
+        private void ExportExcleDccSendMail(List<Application_logDto> dataList)
+        {
+            var filePath = Path.Combine(_env.ContentRootPath, "Files", "reportDCCSendMail.xlsx");
+
+            using var workbook = new XLWorkbook(filePath);
+            var worksheet = workbook.Worksheet("Report");
+            int row = 3;
+            int autoId = 1;
+
+            // remove Data
+            int lastRow = worksheet.LastRowUsed()!.RowNumber();
+            if (lastRow >= row)
+            {
+                worksheet.Rows(row, lastRow).Delete();
+            }
+
+            foreach (var item in dataList)
+            {
+
+                item.Id = autoId++;
+
+                worksheet.Cell($"A{row}").Value = item.Id;
+                worksheet.Cell($"B{row}").Value = item.Group_name;
+                worksheet.Cell($"C{row}").Value = item.Username;
+                worksheet.Cell($"D{row}").Value = item.Action;
+                worksheet.Cell($"E{row}").Value = item.Action_date_time;
+                worksheet.Cell($"F{row}").Value = item.Detail;
+                worksheet.Cell($"G{row}").Value = item.Bu;
+                worksheet.Cell($"H{row}").Value = item.Position;
+                worksheet.Cell($"I{row}").Value = item.Resigned_date;
+                worksheet.Cell($"J{row}").Value = item.Days_after_action;
+                worksheet.Cell($"K{row}").Value = item.Event_type;
+                worksheet.Cell($"L{row}").Value = item.Unauthorized;
+                worksheet.Cell($"M{row}").Value = item.Download_more_10_files_day;
+                worksheet.Cell($"N{row}").Value = item.Employee_resigning_within_one_month;
+                worksheet.Cell($"O{row}").Value = item.Is_not_dcc;
+                row++;
+            }
+            var newlastRow = row - 1;
+            var range = worksheet.Range($"A3:O{newlastRow}");
+
+            range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            range.Style.Border.OutsideBorderColor = XLColor.Black;
+            range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            range.Style.Border.InsideBorderColor = XLColor.Black;
+            workbook.Save();
+        }
 
         #endregion
     }

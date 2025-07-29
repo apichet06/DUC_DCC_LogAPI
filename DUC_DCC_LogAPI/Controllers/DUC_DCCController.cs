@@ -49,14 +49,14 @@ namespace DUC_DCC_LogAPI.Controllers
             return Ok(results);
         }
 
-        [HttpGet("ExportExcelDUCBas64")]
-        public async Task<IActionResult> GetExportExcel([FromQuery] SearchDto request)
-        {
-            var fileData = await _DCC_Log.ExportExcel(request); 
+        //[HttpGet("ExportExcelDUCBas64")]
+        //public async Task<IActionResult> GetExportExcel([FromQuery] SearchDto request)
+        //{
+        //    var fileData = await _DCC_Log.ExportExcel(request); 
 
-            return Ok(fileData);
+        //    return Ok(fileData);
 
-        }
+        //}
 
 
         [HttpGet("ExportExcelLog")]
@@ -77,24 +77,24 @@ namespace DUC_DCC_LogAPI.Controllers
              
         }
 
-        [HttpGet("ExportExcelDCCLog")]
-        public async Task<IActionResult> GetExportExcelDccLog([FromQuery] SearchDto request)
-        {
-            try
-            {
-                var excelBytes = await _DCC_Log.ExportExcelDccLog(request);
-                return File(
-                    excelBytes,
-                    ContentTypeConfig.Xlsx,
-                    "DCC_reportLog.xlsx"
-                );
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Failed to export Excel file: {ex.Message}");
-            }
+        //[HttpGet("ExportExcelDCCLog")]
+        //public async Task<IActionResult> GetExportExcelDccLog([FromQuery] SearchDto request)
+        //{
+        //    try
+        //    {
+        //        var excelBytes = await _DCC_Log.ExportExcelDccLog(request);
+        //        return File(
+        //            excelBytes,
+        //            ContentTypeConfig.Xlsx,
+        //            "DCC_reportLog.xlsx"
+        //        );
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, $"Failed to export Excel file: {ex.Message}");
+        //    }
 
-        }
+        //}
 
 
         [HttpGet("ExportExcelLogAccept")]

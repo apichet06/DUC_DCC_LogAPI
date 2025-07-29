@@ -87,19 +87,19 @@ app.UseSwaggerUI(c =>
     //c.RoutePrefix = "swagger";
 });
 
-//app.UseCors(policy =>
-//{
-//    policy.WithOrigins("http://localhost:5173") // Frontend origin
-//          .AllowAnyHeader()
-//          .AllowAnyMethod()
-//          .AllowCredentials();
-//});
+app.UseCors(policy =>
+{
+    policy.WithOrigins("http://localhost:5173") // Frontend origin
+          .AllowAnyHeader()
+          .AllowAnyMethod()
+          .AllowCredentials();
+});
 //app.UseCors();
-app.UseCors(builder => builder
-    .AllowAnyOrigin()
-    .AllowAnyMethod()
-    .AllowAnyHeader());
-    
+//app.UseCors(builder => builder
+//    .AllowAnyOrigin()
+//    .AllowAnyMethod()
+//    .AllowAnyHeader());
+
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
