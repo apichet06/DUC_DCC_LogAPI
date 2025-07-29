@@ -7,6 +7,7 @@ namespace DUC_DCC_LogAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    
     public class AuthenController (IAuthenService authen) : ControllerBase
     {
         private readonly IAuthenService _authen = authen;
@@ -16,7 +17,7 @@ namespace DUC_DCC_LogAPI.Controllers
             return Ok(await _authen.Authen(request));
         }
 
-        [HttpPost("login")]
+        [HttpPost("login")] 
         public async Task<IActionResult> Logins([FromForm] AuthenDto authen)
         {
          
@@ -29,7 +30,9 @@ namespace DUC_DCC_LogAPI.Controllers
                 SameSite = SameSiteMode.None,
                 Expires = DateTime.Now.AddDays(6)
             });
+            return Redirect("http://localhost:5173/reportlog");
 
+            #region || backup ||
             //var userJson = System.Text.Json.JsonSerializer.Serialize(authResult.User);
             //Response.Cookies.Append("user", userJson, new CookieOptions
             //{
@@ -38,17 +41,18 @@ namespace DUC_DCC_LogAPI.Controllers
             //    SameSite = SameSiteMode.Strict,
             //    Expires = DateTime.UtcNow.AddMinutes(60)
             //}); 
-             //return Redirect("http://localhost:5173/reportlog");
-            return Ok(new
-            {
-                IsSuccess = true,
-                Token = authResult.token,
-                Message = authResult.Message
-            });
+            #endregion
+
+
+            #region || backup ||
+            //return Ok(new
+            //{
+            //    IsSuccess = true,
+            //    Token = authResult.token,
+            //    Message = authResult.Message
+            //});
+            #endregion
         }
-
-
-
-      
+         
     }
 }

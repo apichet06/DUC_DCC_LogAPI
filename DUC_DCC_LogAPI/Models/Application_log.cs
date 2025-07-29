@@ -23,5 +23,6 @@ namespace DUC_DCC_LogAPI.Models
       public string? Users_action {  get; set; }
       public DateTime? User_action_date { get; set; }
       public string? dcc_duc {  get; set; }
+      public DateTime? Upload_datetime { get; set; }
     }
 }
