@@ -11,13 +11,13 @@ namespace DUC_DCC_LogAPI.Controllers
         private readonly IScheduleService _scheduleService  = scheduleService;
         [HttpGet("SchedulDuc")]
         public async Task<IActionResult> GetScheduleDUC() {
-            return Ok(await _scheduleService.ImportDccAsync());
+            return Ok(await _scheduleService.ImportDucAsync());
         }
 
         [HttpGet("SchedulDcc")]
         public async Task<IActionResult> GetSchedulDCC()
         {
-            return Ok(await _scheduleService.ImportDucAsync());
+            return Ok(await _scheduleService.ImportDccAsync());
         }
 
     }

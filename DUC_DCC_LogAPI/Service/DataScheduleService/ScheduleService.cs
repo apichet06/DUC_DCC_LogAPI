@@ -32,13 +32,16 @@ namespace DUC_DCC_LogAPI.Service.DccService
         }
 
         #region || DCC Import Data ||
-        public async Task<ResponseDto> ImportDccAsync()
+        public async Task<ResponseDto>  ImportDucAsync()
         {
             try
             {
-                DateTime DateActiont  = DateTime.Today.AddDays(-1);
-                string formattedDate = DateActiont.ToString("yyyy-MM-dd");
-                var response = await _httpClient.GetAsync($"{_dccApiUrl}&action_datetime={formattedDate}");
+                DateTime formattedDate = new DateTime(2025, 7, 13);
+                //DateTime endDate = startDate.AddDays(1);
+
+                //DateTime DateActiont  = DateTime.Today.AddDays(-1);
+                string formattedDate1 = formattedDate.ToString("yyyy-MM-dd");
+                var response = await _httpClient.GetAsync($"{_dccApiUrl}&action_datetime={formattedDate1}");
                 response.EnsureSuccessStatusCode();
 
                 var serializerOptions = new JsonSerializerOptions
@@ -66,12 +69,13 @@ namespace DUC_DCC_LogAPI.Service.DccService
                             Detail = t.Detail,
                             Days_after_action = t.Days_after_action,
                             Download_more_10_files_day = t.Download_more_10_files_per_day,
-                            dcc_duc = "DUC",
+                            App_log = "DUC",
                             Employee_resigning_within_one_month = t.Employee_resigning_within_one_month,
                             Event_type = t.Event_type, 
                             Position = t.Position,
                             Resigned_date = t.Resigned_date,
-                            Unauthorized = t.Unauthorized  
+                            Unauthorized = t.Unauthorized,
+                            Upload_datetime = DateTime.Now
                         }).ToList();
 
                         await _dbContext.AddRangeAsync(entities); // ถ้าต้องการใส่ options หรือ token สามารถเพิ่มได้
@@ -94,21 +98,21 @@ namespace DUC_DCC_LogAPI.Service.DccService
         }
         #endregion
 
-        public async Task<ResponseDto> ImportDucAsync()
+        public async Task<ResponseDto> ImportDccAsync() 
         {
             try
             {
 
-                DateTime startDate = DateTime.Today.AddDays(-1);
-                DateTime endDate = DateTime.Today;
+                //DateTime startDate = DateTime.Today.AddDays(-1);
+                //DateTime endDate = DateTime.Today;
 
-                //DateTime startDate = new DateTime(2025, 7, 13);   
-                //DateTime endDate = startDate.AddDays(1);
-                 
+                DateTime startDate = new DateTime(2025, 7, 13);
+                DateTime endDate = startDate.AddDays(1);
+
                 List<dcc_crud_log> objList = await _dbContext.dcc_crud_log
                     .Where(x => x.Action_datetime >= startDate && x.Action_datetime < endDate)
                     .ToListAsync(); 
-                //_response.Result = _mapper.Map<List<dcc_crud_log>>(objList);
+              
 
                 if (objList.Count > 0) {
 
@@ -127,13 +131,14 @@ namespace DUC_DCC_LogAPI.Service.DccService
                             Detail = t.Detail,
                             Days_after_action = t.Resign_after_action,
                             Download_more_10_files_day = t.Is_over_10_file_per_day,
-                            Is_not_dcc = t.Is_not_dcc,
+                            Is_bu_dcc = t.Is_not_dcc,
                             Employee_resigning_within_one_month = t.Is_resigned_within_1_month,
                             Event_type = t.Event_type,
                             Position = t.Position,
                             Resigned_date = t.Resigned_date,
                             Unauthorized = t.Unauthorized,
-                            dcc_duc = "DCC",
+                            App_log = "DCC",
+                            Upload_datetime = DateTime.Now
 
                         }).ToList();
                         await _dbContext.AddRangeAsync(entities);

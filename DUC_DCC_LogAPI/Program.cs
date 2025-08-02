@@ -59,46 +59,30 @@ builder.Services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
  
-
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy( // กำหนดเป็น Default Policy ไปเลยจะใช้ง่าย
-        policy =>
-        {
-            policy.WithOrigins("http://localhost:5173") // << แก้ไข: ระบุแค่ Origin
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials(); // << เพิ่ม: สำคัญมากสำหรับคุกกี้
-        });
-});
-
 var app = builder.Build();
 
+
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
+if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UsePathBase("/CRUDLogs/dccduc_Api_new");
+app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/dccduc_Api_new/swagger/v1/swagger.json", "DUC_DCC_LogAPI API");
+    c.SwaggerEndpoint("/CRUDLogs/dccduc_Api_new/swagger/v1/swagger.json", "DUC_DCC_LogAPI API"); 
     c.RoutePrefix = string.Empty;
-    //c.RoutePrefix = "swagger";
+   
 });
 
-app.UseCors(policy =>
-{
-    policy.WithOrigins("http://localhost:5173") // Frontend origin
-          .AllowAnyHeader()
-          .AllowAnyMethod()
-          .AllowCredentials();
-});
-//app.UseCors();
-//app.UseCors(builder => builder
-//    .AllowAnyOrigin()
-//    .AllowAnyMethod()
-//    .AllowAnyHeader());
+
+app.UseCors(builder => builder
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader());
 
 
 app.UseHttpsRedirection();

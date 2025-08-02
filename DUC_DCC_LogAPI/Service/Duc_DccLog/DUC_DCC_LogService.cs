@@ -96,7 +96,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         //    try
         //    {
 
-        //        IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_action == null);
+        //        IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_accept == null);
 
         //        if (request != null && request.Search != null && request.Search.Any())
         //        {
@@ -113,7 +113,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         //                x.Unauthorized!.ToLower().Contains(searchTerm) ||
         //                x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
         //                x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-        //                x.Users_action!.ToLower().Contains(searchTerm));
+        //                x.Users_accept!.ToLower().Contains(searchTerm));
         //        }
 
         //        if (request!.startDate.HasValue)
@@ -211,7 +211,16 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         #region || ExportExcelAccept || 
         public async Task<byte[]> ExportExcelAccept(SearchDto request)
         {
-            IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_action != null && x.dcc_duc == request.tapData);
+            IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_accept != null && x.App_log == request.tapData);
+
+            if (query.Count() > 0) {
+               
+                _response.Message = _message.Not_found;
+
+            }
+         
+
+            
 
             if (request != null && request.Search != null && request.Search.Any())
             {
@@ -228,7 +237,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     x.Unauthorized!.ToLower().Contains(searchTerm) ||
                     x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
                     x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-                    x.Users_action!.ToLower().Contains(searchTerm));
+                    x.Users_accept!.ToLower().Contains(searchTerm));
             }
 
             if (request!.startDate.HasValue)
@@ -275,14 +284,14 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 worksheet.Cell($"N{row}").Value = item.Employee_resigning_within_one_month;
                 if (request.tapData == "DCC")
                 {
-                    worksheet.Cell($"O{row}").Value = item.Is_not_dcc;
-                    worksheet.Cell($"P{row}").Value = item.Users_action;
-                    worksheet.Cell($"Q{row}").Value = item.User_action_date;
+                    worksheet.Cell($"O{row}").Value = item.Is_bu_dcc;
+                    worksheet.Cell($"P{row}").Value = item.Users_accept;
+                    worksheet.Cell($"Q{row}").Value = item.User_accept_date;
                 }
                 else
                 {
-                    worksheet.Cell($"O{row}").Value = item.Users_action;
-                    worksheet.Cell($"P{row}").Value = item.User_action_date;
+                    worksheet.Cell($"O{row}").Value = item.Users_accept;
+                    worksheet.Cell($"P{row}").Value = item.User_accept_date;
                 }
 
 
@@ -312,7 +321,11 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         public async Task<byte[]> ExportExcelLog(SearchDto request)
         {
-            IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_action == null && x.dcc_duc == request.tapData);
+            IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_accept == null && x.App_log == request.tapData);
+
+            //if (query == null)
+            //      _response.Message = _message.Not_found;
+           
 
             if (request != null && request.Search != null && request.Search.Any())
             {
@@ -329,7 +342,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     x.Unauthorized!.ToLower().Contains(searchTerm) ||
                     x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
                     x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-                    x.Users_action!.ToLower().Contains(searchTerm));
+                    x.Users_accept!.ToLower().Contains(searchTerm));
             }
 
             if (request!.startDate.HasValue)
@@ -375,7 +388,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 worksheet.Cell($"M{row}").Value = item.Download_more_10_files_day;
                 worksheet.Cell($"N{row}").Value = item.Employee_resigning_within_one_month;
                 if(request.tapData == "DCC")
-                    worksheet.Cell($"O{row}").Value = item.Is_not_dcc; 
+                    worksheet.Cell($"O{row}").Value = item.Is_bu_dcc; 
                 row++;
             }
 
@@ -402,7 +415,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         //public async Task<byte[]> ExportExcelDccLog(SearchDto request)
         //{
-        //    IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_action == null && x.dcc_duc == request.tapData);
+        //    IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_accept == null && x.App_log == request.tapData);
 
         //    if (request != null && request.Search != null && request.Search.Any())
         //    {
@@ -419,7 +432,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         //            x.Unauthorized!.ToLower().Contains(searchTerm) ||
         //            x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
         //            x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-        //            x.Users_action!.ToLower().Contains(searchTerm));
+        //            x.Users_accept!.ToLower().Contains(searchTerm));
         //    }
 
         //    if (request!.startDate.HasValue)
@@ -545,7 +558,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             try
             {
 
-                IQueryable<Application_log> query = _db.Application_Log.Where(x=>x.Users_action == null && x.dcc_duc == request.tapData);
+                IQueryable<Application_log> query = _db.Application_Log.Where(x=>x.Users_accept == null && x.App_log == request.tapData);
 
                 if (request != null && request.Search != null && request.Search.Any())
                 {
@@ -562,7 +575,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                         x.Unauthorized!.ToLower().Contains(searchTerm) ||
                         x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
                         x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-                        x.Users_action!.ToLower().Contains(searchTerm));
+                        x.Users_accept!.ToLower().Contains(searchTerm));
                        
                 }
 
@@ -574,7 +587,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
                 if (request.endDate.HasValue)
                 {
-                    DateTime endDateExclusive = request.endDate.Value.Date.AddDays(0); // เอาวันถัดไปตอน 00:00:00
+                    DateTime endDateExclusive = request.endDate.Value.Date.AddDays(1); // เอาวันถัดไปตอน 00:00:00
                     query = query.Where(x => x.Action_date_time < endDateExclusive);
                 }
 
@@ -603,7 +616,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             try
             {
 
-                IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_action != null && x.dcc_duc == request.tapData);
+                IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_accept != null && x.App_log == request.tapData);
 
                 if (request != null && request.Search != null && request.Search.Any())
                 {
@@ -620,7 +633,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                         x.Unauthorized!.ToLower().Contains(searchTerm) ||
                         x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
                         x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-                        x.Users_action!.ToLower().Contains(searchTerm)
+                        x.Users_accept!.ToLower().Contains(searchTerm)
                  );
                 }
 
@@ -634,7 +647,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
                 if (request.endDate.HasValue)
                 {
-                    DateTime endDateExclusive = request.endDate.Value.Date.AddDays(0); // เอาวันถัดไปตอน 00:00:00
+                    DateTime endDateExclusive = request.endDate.Value.Date.AddDays(1); // เอาวันถัดไปตอน 00:00:00
                     query = query.Where(x => x.Action_date_time < endDateExclusive);
                 }
 
@@ -663,21 +676,22 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
       
 
                 DateTime startDate = new DateTime(2025, 7, 13);
+                //DateTime startDate = DateTime.Today;
                 DateTime endDate = startDate.AddDays(1);
 
                 List<Application_log> objDucList = await _db.Application_Log
-                    .Where(x => x.Action_date_time >= startDate && x.Action_date_time < endDate && x.dcc_duc == "DUC")
+                    .Where(x => x.Action_date_time >= startDate && x.Action_date_time < endDate && x.App_log == "DUC")
                     .ToListAsync();
                 var mappDucList = _mapper.Map<List<Application_logDto>>(objDucList);
 
                   ExportExcleDucSendMail(mappDucList);
 
                 List<Application_log> objDccList = await _db.Application_Log
-                 .Where(x => x.Action_date_time >= startDate && x.Action_date_time < endDate && x.dcc_duc == "DCC")
+                 .Where(x => x.Action_date_time >= startDate && x.Action_date_time < endDate && x.App_log == "DCC")
                  .ToListAsync();
                 var mappDccList = _mapper.Map<List<Application_logDto>>(objDccList);
 
-                ExportExcleDccSendMail(mappDccList);
+                 ExportExcleDccSendMail(mappDccList);
 
 
                 var sb = new StringBuilder();
@@ -690,6 +704,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                   font-family: Arial, Helvetica, sans-serif;
                                   border-collapse: collapse;
                                   width: 100%;
+                                  font-size: 10px;
                                 }
 
                                 #customers td, #customers th {
@@ -791,27 +806,30 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 string filePathDcc = Path.Combine(_env.ContentRootPath, "Files", "reportDCCSendMail.xlsx");
                 var message = new MailMessage();
                 message.From = new MailAddress(_smtpSettings.SenderEmail!, _smtpSettings.SenderName);
-                message.To.Add("apichet06@gmail.com");
+                message.To.Add("apichets@fabrinet.co.th");
                 message.Subject = "AutoMail";
                 message.Body = body;
-                message.IsBodyHtml = true; 
+                message.IsBodyHtml = true;
                 message.Attachments.Add(new Attachment(filePathDuc));
                 message.Attachments.Add(new Attachment(filePathDcc));
-         
 
-                using (var client = new SmtpClient(_smtpSettings.SmtpServer,_smtpSettings.SmtpPort))
+
+                using (var client = new SmtpClient(_smtpSettings.SmtpServer))
                 {
-                    client.EnableSsl = true;
+                    client.EnableSsl = false; // ถ้าเปิดใช้ Port เช่น 587 ,25 ให้ EnableSsl เป็น true
                     //client.UseDefaultCredentials = true; // สำคัญ
                     client.UseDefaultCredentials = false;
-                    client.Credentials = new NetworkCredential(_smtpSettings.Username, _smtpSettings.Password); //ถ้าเป็นระบบภายในไม่ต้องมีการยืนยันตัวตน รหัสผ่าน
+                    //client.Credentials = new NetworkCredential(_smtpSettings.Username, _smtpSettings.Password); //ถ้าเป็นระบบภายในไม่ต้องมีการยืนยันตัวตน รหัสผ่าน
                     await client.SendMailAsync(message);
                 }
+
+                _response.Message = _message.SendmailSuccess;
 
             }
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
+                Console.WriteLine(ex.ToString());
                 _response.Message = _message.an_error_occurred + ex.Message;
             }
             return _response;
@@ -849,8 +867,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 foreach (var log in logsToUpdate)
                 {
            
-                    log.Users_action = "Apichet";
-                    log.User_action_date = DateTime.Now;
+                    log.Users_accept = "Apichet";
+                    log.User_accept_date = DateTime.Now;
                 }
                  
                 
@@ -870,7 +888,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         #endregion
 
-        #region || Export Excel ||
+        #region || Export Excel send Mail ||
         private  void  ExportExcleDucSendMail(List<Application_logDto> dataList)
         {
             var filePath = Path.Combine(_env.ContentRootPath, "Files", "reportDUCSendMail.xlsx");
@@ -954,7 +972,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 worksheet.Cell($"L{row}").Value = item.Unauthorized;
                 worksheet.Cell($"M{row}").Value = item.Download_more_10_files_day;
                 worksheet.Cell($"N{row}").Value = item.Employee_resigning_within_one_month;
-                worksheet.Cell($"O{row}").Value = item.Is_not_dcc;
+                worksheet.Cell($"O{row}").Value = item.Is_bu_dcc;
                 row++;
             }
             var newlastRow = row - 1;

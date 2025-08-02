@@ -17,7 +17,12 @@
         public string? Download_more_10_files_day { get; set; }
         public string? Employee_resigning_within_one_month { get; set; }
         public string? Users_action { get; set; }
-        public string? Is_not_dcc { get; set; }
-        public DateTime? User_action_date { get; set; }
+        public string? Is_bu_dcc { get; set; }
+        public string? Users_accept { get; set; }
+        public DateTime? User_accept_date { get; set; }
+        public string? User_accept_edit { get; set; }
+        public DateTime? User_accept_edit_date { get; set; }
+        public string? User_accept_comment { get; set; }
+        public string? Status_accept { get; set; }
     }
 }

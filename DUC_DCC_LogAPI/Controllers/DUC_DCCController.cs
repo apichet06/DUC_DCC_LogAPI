@@ -42,7 +42,7 @@ namespace DUC_DCC_LogAPI.Controllers
             return Ok(results);
         }
 
-        [HttpGet("SendMail")]
+        [HttpGet("SendMailSchedule")]
         public async Task<IActionResult> GetSendMail()
         {
             var results = await _DCC_Log.SendMail();
