@@ -3,7 +3,8 @@
     public class CheckedDataDto
     {
         public List<int>? Id { get; set; } 
-        public List<string>? Users_accept { get; set; }
-        public List<string>? Users_accept_comment { get; set; }
+        public  string? Users_accept { get; set; }
+        public string? Users_accept_comment { get; set; }
+        public string? Status_accept { get; set; }
     }
 }

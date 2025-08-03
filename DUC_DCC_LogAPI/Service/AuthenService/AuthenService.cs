@@ -52,8 +52,8 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
                 var claims = new[]
                  {
                         new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]!),
-                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                        new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
+                        new Claim(JwtRegisteredClaimNames.Iat,
+                        new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString()), 
                         new Claim("UserId", user.username!)
                     };
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["jwt:key"]!));
@@ -61,7 +61,7 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
                 var token = new JwtSecurityToken(
                     _configuration["jwt:Issuer"],
                     _configuration["jwt:Audience"],
-                claims, expires: DateTime.UtcNow.AddMinutes(10),
+                claims, expires: DateTime.Now.AddHours(24),
                 signingCredentials: singIn);
 
                 var result = _mapper.Map<UserResposeDto>(user);

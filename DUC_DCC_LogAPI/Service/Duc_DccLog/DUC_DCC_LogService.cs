@@ -865,10 +865,11 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                  
                  
                 foreach (var log in logsToUpdate)
-                {
-           
-                    log.Users_accept = "Apichet";
+                { 
+                    log.Users_accept = request.Users_accept;
+                    log.User_accept_comment = request.Users_accept_comment;
                     log.User_accept_date = DateTime.Now;
+                    log.Status_accept = request.Status_accept;
                 }
                  
                 
