@@ -96,7 +96,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         //    try
         //    {
 
-        //        IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_accept == null);
+        //        IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Admin_confirm == null);
 
         //        if (request != null && request.Search != null && request.Search.Any())
         //        {
@@ -113,7 +113,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         //                x.Unauthorized!.ToLower().Contains(searchTerm) ||
         //                x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
         //                x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-        //                x.Users_accept!.ToLower().Contains(searchTerm));
+        //                x.Admin_confirm!.ToLower().Contains(searchTerm));
         //        }
 
         //        if (request!.startDate.HasValue)
@@ -211,15 +211,14 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         #region || ExportExcelAccept || 
         public async Task<byte[]> ExportExcelAccept(SearchDto request)
         {
-            IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_accept != null && x.App_log == request.tapData);
+            IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Admin_confirm != null && x.App_log == request.tapData);
 
             if (query.Count() > 0) {
                
                 _response.Message = _message.Not_found;
 
             }
-         
-
+          
             
 
             if (request != null && request.Search != null && request.Search.Any())
@@ -237,7 +236,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     x.Unauthorized!.ToLower().Contains(searchTerm) ||
                     x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
                     x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-                    x.Users_accept!.ToLower().Contains(searchTerm));
+                    x.Admin_confirm!.ToLower().Contains(searchTerm));
             }
 
             if (request!.startDate.HasValue)
@@ -285,13 +284,13 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 if (request.tapData == "DCC")
                 {
                     worksheet.Cell($"O{row}").Value = item.Is_bu_dcc;
-                    worksheet.Cell($"P{row}").Value = item.Users_accept;
-                    worksheet.Cell($"Q{row}").Value = item.User_accept_date;
+                    worksheet.Cell($"P{row}").Value = item.Admin_confirm;
+                    worksheet.Cell($"Q{row}").Value = item.Admin_confirm_date;
                 }
                 else
                 {
-                    worksheet.Cell($"O{row}").Value = item.Users_accept;
-                    worksheet.Cell($"P{row}").Value = item.User_accept_date;
+                    worksheet.Cell($"O{row}").Value = item.Admin_confirm;
+                    worksheet.Cell($"P{row}").Value = item.Admin_confirm_date;
                 }
 
 
@@ -321,7 +320,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         public async Task<byte[]> ExportExcelLog(SearchDto request)
         {
-            IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_accept == null && x.App_log == request.tapData);
+            IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Admin_confirm == null && x.App_log == request.tapData);
 
             //if (query == null)
             //      _response.Message = _message.Not_found;
@@ -342,7 +341,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     x.Unauthorized!.ToLower().Contains(searchTerm) ||
                     x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
                     x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-                    x.Users_accept!.ToLower().Contains(searchTerm));
+                    x.Admin_confirm!.ToLower().Contains(searchTerm));
             }
 
             if (request!.startDate.HasValue)
@@ -415,7 +414,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         //public async Task<byte[]> ExportExcelDccLog(SearchDto request)
         //{
-        //    IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_accept == null && x.App_log == request.tapData);
+        //    IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Admin_confirm == null && x.App_log == request.tapData);
 
         //    if (request != null && request.Search != null && request.Search.Any())
         //    {
@@ -432,7 +431,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         //            x.Unauthorized!.ToLower().Contains(searchTerm) ||
         //            x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
         //            x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-        //            x.Users_accept!.ToLower().Contains(searchTerm));
+        //            x.Admin_confirm!.ToLower().Contains(searchTerm));
         //    }
 
         //    if (request!.startDate.HasValue)
@@ -558,7 +557,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             try
             {
 
-                IQueryable<Application_log> query = _db.Application_Log.Where(x=>x.Users_accept == null && x.App_log == request.tapData);
+                IQueryable<Application_log> query = _db.Application_Log.Where(x=>x.Admin_confirm == null && x.App_log == request.tapData);
 
                 if (request != null && request.Search != null && request.Search.Any())
                 {
@@ -575,7 +574,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                         x.Unauthorized!.ToLower().Contains(searchTerm) ||
                         x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
                         x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-                        x.Users_accept!.ToLower().Contains(searchTerm));
+                        x.Admin_confirm!.ToLower().Contains(searchTerm));
                        
                 }
 
@@ -616,7 +615,37 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             try
             {
 
-                IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Users_accept != null && x.App_log == request.tapData);
+                IQueryable<Application_log> applog = _db.Application_Log.Where(x => x.Admin_confirm != null && x.App_log == request.tapData);
+
+                var query = from a in applog
+                            join b in _db.Users_Permission on a.Admin_confirm equals b.emp_no into abgroup
+                            from ab in abgroup.DefaultIfEmpty()
+                            join c in _db.Users_Permission on a.Admin_confirm_edit equals c.emp_no into acgroup
+                            from ac in acgroup.DefaultIfEmpty()
+                          select new SaveDUC_DCC_logDto
+                          {
+                              Id = a.Id,
+                              Group_name = a.Group_name,
+                              Username = a.Username,
+                              Action = a.Action,
+                              Action_date_time = a.Action_date_time,
+                              Detail=a.Detail,
+                              Bu =a.Bu,
+                              Position = a.Position,
+                              Resigned_date = a.Resigned_date,
+                              Days_after_action = a.Days_after_action,
+                              Event_type = a.Event_type,
+                              Unauthorized = a.Unauthorized,
+                              Download_more_10_files_day =a.Download_more_10_files_day,
+                              Employee_resigning_within_one_month = a.Employee_resigning_within_one_month,
+                              Is_bu_dcc = a.Is_bu_dcc,
+                              Admin_confirm =  $"{ab.fristname} {ab.lastname}",
+                              Admin_confirm_date = a.Admin_confirm_date,
+                              Admin_confirm_edit = $"{ac.fristname} {ac.lastname}",
+                              Admin_edit_confirm_date = a.Admin_edit_confirm_date,
+                              Admin_confirm_comment = a.Admin_confirm_comment,
+                              Admin_confirm_event = a.Admin_confirm_event,
+                          };
 
                 if (request != null && request.Search != null && request.Search.Any())
                 {
@@ -633,7 +662,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                         x.Unauthorized!.ToLower().Contains(searchTerm) ||
                         x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
                         x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-                        x.Users_accept!.ToLower().Contains(searchTerm)
+                        x.Admin_confirm!.ToLower().Contains(searchTerm)
                  );
                 }
 
@@ -651,8 +680,10 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     query = query.Where(x => x.Action_date_time < endDateExclusive);
                 }
 
+                 
 
-                IEnumerable<Application_log> obj = await query.ToListAsync();
+                IEnumerable<SaveDUC_DCC_logDto> obj = await query.ToListAsync();
+               
                 IEnumerable<SaveDUC_DCC_logDto> mappDataList = _mapper.Map<IEnumerable<SaveDUC_DCC_logDto>>(obj);
 
                 _response.Result = mappDataList;
@@ -837,14 +868,57 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         }
         #endregion
 
+        #region || EditDataAccept แก้ไขหลังจากบันทึกไปแล้ว || 
+        public async Task<ResponseDto> EditDataAccept(EditDataAcceptDto request, int id)
+        {
+            try
+            {
+                var applicationLog = await _db.Application_Log.FirstOrDefaultAsync(a => a.Id == id);
+                if (applicationLog == null)
+                {
+                    _response.IsSuccess = false;
+                    _response.Message = "ไม่พบข้อมูล Log ที่ต้องการแก้ไข"; // ข้อความที่เป็นมิตรกับผู้ใช้
+                    return _response;
+                }
+
+                var user = await _db.Users_Permission.FirstOrDefaultAsync(u => u.emp_email == request.Admin_confirm_edit);
+                if (user == null)
+                {
+                    _response.IsSuccess = false;
+                    _response.Message = "ไม่พบข้อมูลผู้ใช้ที่ทำการอนุมัติ";
+                    return _response;
+                } 
+                applicationLog.Admin_confirm_comment = request.Admin_confirm_comment;
+                applicationLog.Admin_edit_confirm_date = DateTime.Now;
+                applicationLog.Admin_confirm_edit = user.emp_no;
+                applicationLog.Admin_confirm_event = request.Admin_confirm_event;
+                //_db.Application_Log.Update(sqlApplication_Log); 
+                await _db.SaveChangesAsync();
+
+                _response.IsSuccess = true;
+                _response.Message = _message.UpdateMessage;
+
+
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.Message = _message.an_error_occurred + ex.Message;
+            }
+            return _response;
+        }
+
+        #endregion
+
+
         #region || UpdateList ||
         public async Task<ResponseDto> UpdateList(CheckedDataDto request)
         {
             try
             {
-                 
+                 var SqlUser = await _db.Users_Permission.FirstOrDefaultAsync(a=>a.emp_email == request.Admin_confirm);
 
-                if (request?.Id == null || !request.Id.Any())
+                if (SqlUser?.Id == null)
                 {
                     _response.IsSuccess = false;
                     _response.Message = "No items to update.";
@@ -853,7 +927,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
             
                 var logsToUpdate = await _db.Application_Log
-                                            .Where(log => request.Id.Contains(log.Id))
+                                            .Where(log => request.Id!.Contains(log.Id))
                                             .ToListAsync();
 
                 if (!logsToUpdate.Any())
@@ -866,10 +940,11 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                  
                 foreach (var log in logsToUpdate)
                 { 
-                    log.Users_accept = request.Users_accept;
-                    log.User_accept_comment = request.Users_accept_comment;
-                    log.User_accept_date = DateTime.Now;
-                    log.Status_accept = request.Status_accept;
+                    log.Admin_confirm= SqlUser!.emp_no;
+                    log.Admin_confirm_comment = request.Admin_confirm_comment;
+                    log.Admin_confirm_date = DateTime.Now;
+                    log.Admin_confirm_event = request.Admin_confirm_event;
+
                 }
                  
                 

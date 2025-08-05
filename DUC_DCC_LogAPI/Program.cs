@@ -4,6 +4,7 @@ using DUC_DCC_LogAPI.Data;
 using DUC_DCC_LogAPI.Models.ApiSetting;
 using DUC_DCC_LogAPI.Models.Dto;
 using DUC_DCC_LogAPI.Service.AuthenService;
+using DUC_DCC_LogAPI.Service.Chart;
 using DUC_DCC_LogAPI.Service.DccService;
 using DUC_DCC_LogAPI.Service.Duc_DccLog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -48,6 +49,7 @@ builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Emai
 builder.Services.AddScoped<IDUC_DCC_Log, DUC_DCC_LogService>();
 builder.Services.AddScoped<IAuthenService, AuthenService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
+builder.Services.AddScoped<IChart, ChartService>();
 
 
 IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();

@@ -18,14 +18,14 @@ namespace DUC_DCC_LogAPI.Models
       public string? Unauthorized { get;   set; }
       public string? Download_more_10_files_day { get; set; }
       public string? Employee_resigning_within_one_month { get; set; }
-      public string? Is_bu_dcc {  get; set; }
-      public string? Users_accept {  get; set; }
-      public DateTime? User_accept_date { get; set; }
+      public string? Is_bu_dcc {  get; set; } 
       public string? App_log {  get; set; }
       public DateTime? Upload_datetime { get; set; }
-      public string? User_accept_edit { get; set; }
-      public DateTime? User_accept_edit_date {  get; set; }
-      public string? User_accept_comment { get; set; }
-      public string? Status_accept { get; set; }
+      public string? Admin_confirm { get; set; }
+      public DateTime? Admin_confirm_date { get; set; }
+      public string? Admin_confirm_edit { get; set; }
+      public DateTime? Admin_edit_confirm_date { get; set; }
+      public string? Admin_confirm_comment { get; set; }
+      public string? Admin_confirm_event { get; set; }
     }
 }

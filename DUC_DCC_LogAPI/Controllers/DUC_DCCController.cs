@@ -42,6 +42,13 @@ namespace DUC_DCC_LogAPI.Controllers
             return Ok(results);
         }
 
+        [HttpPut("EditAccept/{id:int}")]
+        public async Task<IActionResult> putEdit([FromBody] EditDataAcceptDto request,int id)
+        {
+            var results = await _DCC_Log.EditDataAccept(request,id);
+            return Ok(results);
+        }
+
         [HttpGet("SendMailSchedule")]
         public async Task<IActionResult> GetSendMail()
         {
@@ -114,6 +121,8 @@ namespace DUC_DCC_LogAPI.Controllers
                 return StatusCode(500, $"Failed to export Excel file: {ex.Message}");
             }
         }
+
+        
 
     }
 

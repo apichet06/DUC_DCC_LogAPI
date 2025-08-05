@@ -9,7 +9,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
     {
         Task<ResponseDto> GetList(SearchDto request);
         Task<ResponseDto> GetSaveLogList(SearchDto request);
-        Task<ResponseDto> UpdateList(CheckedDataDto request); 
+        Task<ResponseDto> UpdateList(CheckedDataDto request);
+        Task<ResponseDto> EditDataAccept(EditDataAcceptDto request,int id);
         Task<ResponseDto> SendMail(); 
         //Task<ResponseDto<FileDownloadDto>> ExportExcel(SearchDto request); 
         Task<byte[]> ExportExcelLog(SearchDto request);
