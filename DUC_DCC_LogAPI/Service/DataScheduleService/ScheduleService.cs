@@ -36,10 +36,10 @@ namespace DUC_DCC_LogAPI.Service.DccService
         {
             try
             {
-                DateTime formattedDate = new DateTime(2025, 7, 13);
+                //DateTime formattedDate = new DateTime(2025, 7, 13);
                 //DateTime endDate = startDate.AddDays(1);
 
-                //DateTime DateActiont  = DateTime.Today.AddDays(-1);
+                DateTime formattedDate = DateTime.Today.AddDays(-1);
                 string formattedDate1 = formattedDate.ToString("yyyy-MM-dd");
                 var response = await _httpClient.GetAsync($"{_dccApiUrl}&action_datetime={formattedDate1}");
                 response.EnsureSuccessStatusCode();
@@ -84,7 +84,7 @@ namespace DUC_DCC_LogAPI.Service.DccService
 
                     // ไม่มี need แล้วที่จะ SaveChangesAsync หลัง BulkInsert
                       await _dbContext.SaveChangesAsync();
-
+                    _response.Result = formattedDate1;
                     _response.Message = _message.InsertMessage;
 
                 }
@@ -106,7 +106,7 @@ namespace DUC_DCC_LogAPI.Service.DccService
                 //DateTime startDate = DateTime.Today.AddDays(-1);
                 //DateTime endDate = DateTime.Today;
 
-                DateTime startDate = new DateTime(2025, 7, 13);
+                DateTime startDate = new DateTime(2025, 6, 29);
                 DateTime endDate = startDate.AddDays(1);
 
                 List<dcc_crud_log> objList = await _dbContext.dcc_crud_log

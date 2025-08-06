@@ -30,8 +30,8 @@ namespace DUC_DCC_LogAPI.Controllers
                 SameSite = SameSiteMode.None,
                 Expires = DateTime.Now.AddDays(6)
             });
-            return Redirect("http://localhost:5173/reportlog");
-            //return Redirect("https://fits/CRUDLogs/dccduclog/");
+            //return Redirect("http://localhost:5173/reportlog");
+            //return Redirect("http://dccduclog/reportlog");
 
             #region || backup ||
             //var userJson = System.Text.Json.JsonSerializer.Serialize(authResult.User);
@@ -46,16 +46,17 @@ namespace DUC_DCC_LogAPI.Controllers
 
 
             #region || backup ||
-            //return Ok(new
-            //{
-            //    IsSuccess = true,
-            //    Token = authResult.token,
-            //    Message = authResult.Message
-            //});
+            return Ok(new
+            {
+                IsSuccess = true,
+                Token = authResult.token,
+                url = "http://dccduclog/reportlog",
+                Message = authResult.Message
+            });
             #endregion
         }
- 
 
-         
+
+
     }
 }
