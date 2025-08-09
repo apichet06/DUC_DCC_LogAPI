@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using DocumentFormat.OpenXml.Bibliography;
 using DUC_DCC_LogAPI.Data;
 using DUC_DCC_LogAPI.Models.Dto;
 using DUC_DCC_LogAPI.Models.Dto.Chart;
@@ -21,13 +22,73 @@ namespace DUC_DCC_LogAPI.Service.Chart
           
         }
 
+        public async Task<ResponseDto> GetChartBarAsync()
+        {
+            try
+            {
+
+
+                // var query = from a in _db.Month
+                //             join b in _db.Application_Log on a.Id equals  b.Action_date_time.Month into ab
+                //             from b in ab.DefaultIfEmpty()
+                //             select new
+                //             {
+                //                 Id = a.Id,
+                //                 Month = b.Action_date_time.Month,
+                //                 App_log = b.App_log,
+                //                 Name = a.Name,
+
+                //             };
+
+                // var result = await query
+                //     .GroupBy(a => new { a.Id, a.Month,a.Name,a.App_log })
+                //     .Select(g => new BarCharDto
+                //     {
+                //         month = g.Key.Id,
+                //         Name = g.Key.Name,
+                //         App_log = g.Key.App_log,
+                //         CountData = g.Count(log => log != null)
+                //     }).ToListAsync();
+
+                //_response.Result = result;
+
+                var query = from month in _db.Month
+                            join log in _db.Application_Log
+                                on month.Id equals log.Action_date_time.Month into monthLogs
+                            from ml in monthLogs.DefaultIfEmpty()  
+                            group ml by new   
+                            {
+                                month.Id,
+                                month.Name,
+                                AppLog = ml.App_log 
+                            } into g
+                           
+                            select new BarCharDto
+                            {
+                                month = g.Key.Id,
+                                Name = g.Key.Name,
+                                App_log = g.Key.AppLog, 
+                                CountData = g.Count(log => log != null)
+                            };
+
+                var result = await query.OrderBy(a=> a.month).ToListAsync();
+                _response.Result = result;
+
+            }
+            catch (Exception ex) { 
+              _response.IsSuccess = false;
+            _response.Message = _message.an_error_occurred + ex.Message;
+            }
+            return _response;
+        }
+
         public async Task<ResponseDto> GetChartDataAsync()
         {
             try
             {
 
                 var query = from log in _db.Application_Log
-                            where log.Admin_confirm != ""
+                            //where log.Admin_confirm == null
                             group log by log.App_log into logGroup
                             select new ChartDto
                             {

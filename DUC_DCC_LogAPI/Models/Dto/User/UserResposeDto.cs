@@ -6,7 +6,7 @@
         public string? emp_no { get; set; }
         public string? emp_email { get; set; }
         public string? username { get; set; }
-        public string? fristname { get; set; }
+        public string? firstname { get; set; }
         public string? lastname { get; set; }
         public int is_active { get; set; }
         public int is_accept { get; set; }

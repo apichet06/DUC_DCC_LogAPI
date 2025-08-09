@@ -2,6 +2,7 @@
 using DUC_DCC_LogAPI.Service.AuthenService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RTools_NTS.Util;
 
 namespace DUC_DCC_LogAPI.Controllers
 {
@@ -26,12 +27,16 @@ namespace DUC_DCC_LogAPI.Controllers
             Response.Cookies.Append("authToken", authResult.token!, new CookieOptions
             {
                 HttpOnly = false,
-                Secure = true, // ควรเป็น true เมื่อ Deploy จริง (ใช้ HTTPS)
-                SameSite = SameSiteMode.None,
-                Expires = DateTime.Now.AddDays(6)
+                Secure = false, // ควรเป็น true เมื่อ Deploy จริง (ใช้ HTTPS)
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTime.Now.AddDays(3)
             });
-            //return Redirect("http://localhost:5173/reportlog");
-            //return Redirect("http://dccduclog/reportlog");
+
+
+            //HttpContext.Response.Cookies.Append("username", userName);
+            //HttpContext.Response.Cookies.Append("authToken", authResult.token!);
+            return Redirect("http://localhost:5173/CRUDLogs/applog/");
+            //return Redirect("https://fits/CRUDLogs/applog");
 
             #region || backup ||
             //var userJson = System.Text.Json.JsonSerializer.Serialize(authResult.User);
@@ -46,13 +51,14 @@ namespace DUC_DCC_LogAPI.Controllers
 
 
             #region || backup ||
-            return Ok(new
-            {
-                IsSuccess = true,
-                Token = authResult.token,
-                url = "http://dccduclog/reportlog",
-                Message = authResult.Message
-            });
+            //return Ok(new
+            //{
+            //    IsSuccess = true,
+            //    Token = authResult.token,
+            //    //url = "http://dccduclog/reportlog",
+            //    url = "http://localhost:5173/reportlog",
+            //    Message = authResult.Message
+            //});
             #endregion
         }
 

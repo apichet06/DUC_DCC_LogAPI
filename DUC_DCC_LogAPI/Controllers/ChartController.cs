@@ -18,6 +18,11 @@ namespace DUC_DCC_LogAPI.Controllers
             var results = await _chart.GetChartDataAsync();
             return Ok(results);
         }
-       
+        [HttpGet("BarChart")]
+        public async Task<IActionResult> GetBarChart()
+        {
+            var results = await _chart.GetChartBarAsync();
+            return Ok(results);
+        }
     }
 }

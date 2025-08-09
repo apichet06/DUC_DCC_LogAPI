@@ -6,6 +6,6 @@ namespace DUC_DCC_LogAPI.Service.Chart
     public interface IChart
     {
         Task<ResponseDto> GetChartDataAsync();
-     
+        Task<ResponseDto> GetChartBarAsync();
     }
 }

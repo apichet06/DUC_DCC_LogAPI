@@ -591,9 +591,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 }
 
                 var obj = await query.ToListAsync();
-                var mappList = _mapper.Map<List<Application_logDto>>(obj);
-
-                 //ExportExcle(mappList);
+                var mappList = _mapper.Map<List<Application_logDto>>(obj); 
+                
                 _response.Result = mappList;
                 
 
@@ -608,7 +607,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         #endregion
          
-        #region || GetSaveLog Accept ||
+        #region || GetSaveLog confirm ||
 
         public async Task<ResponseDto> GetSaveLogList(SearchDto request)
         {
@@ -639,9 +638,9 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                               Download_more_10_files_day =a.Download_more_10_files_day,
                               Employee_resigning_within_one_month = a.Employee_resigning_within_one_month,
                               Is_bu_dcc = a.Is_bu_dcc,
-                              Admin_confirm =  $"{ab.fristname} {ab.lastname}",
+                              Admin_confirm =  $"{ab.firstname} {ab.lastname}",
                               Admin_confirm_date = a.Admin_confirm_date,
-                              Admin_confirm_edit = $"{ac.fristname} {ac.lastname}",
+                              Admin_confirm_edit = $"{ac.firstname} {ac.lastname}",
                               Admin_edit_confirm_date = a.Admin_edit_confirm_date,
                               Admin_confirm_comment = a.Admin_confirm_comment,
                               Admin_confirm_event = a.Admin_confirm_event,
@@ -941,7 +940,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 foreach (var log in logsToUpdate)
                 { 
                     log.Admin_confirm= SqlUser!.emp_no;
-                    log.Admin_confirm_comment = request.Admin_confirm_comment;
+                    log.Admin_confirm_comment = request.Admin_confirm_comment;   
                     log.Admin_confirm_date = DateTime.Now;
                     log.Admin_confirm_event = request.Admin_confirm_event;
 
