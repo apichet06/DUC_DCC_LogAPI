@@ -208,113 +208,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
 
 
-        #region || ExportExcelAccept || 
-        public async Task<byte[]> ExportExcelAccept(SearchDto request)
-        {
-            IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Admin_confirm != null && x.App_log == request.tapData);
-
-            if (query.Count() > 0) {
-               
-                _response.Message = _message.Not_found;
-
-            }
-          
-            
-
-            if (request != null && request.Search != null && request.Search.Any())
-            {
-                string searchTerm = request.Search.ToLower();
-
-                query = query.Where(x =>
-                    x.Group_name!.ToLower().Contains(searchTerm) ||
-                    x.Username!.ToLower().Contains(searchTerm) ||
-                    x.Action!.ToLower().Contains(searchTerm) ||
-                    x.Detail!.ToLower().Contains(searchTerm) ||
-                    x.Bu!.ToLower().Contains(searchTerm) ||
-                    x.Position!.ToLower().Contains(searchTerm) ||
-                    x.Event_type!.ToLower().Contains(searchTerm) ||
-                    x.Unauthorized!.ToLower().Contains(searchTerm) ||
-                    x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
-                    x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-                    x.Admin_confirm!.ToLower().Contains(searchTerm));
-            }
-
-            if (request!.startDate.HasValue)
-            {
-                DateTime startDate = request.startDate.Value.Date; // เอาเฉพาะส่วนวันที่ (เวลา 00:00:00)
-                query = query.Where(x => x.Action_date_time >= startDate);
-            }
-
-            if (request.endDate.HasValue)
-            {
-                DateTime endDateExclusive = request.endDate.Value.Date.AddDays(0); // เอาวันถัดไปตอน 00:00:00
-                query = query.Where(x => x.Action_date_time < endDateExclusive);
-            }
-
-            var obj = await query.ToListAsync();
-            var mappList = _mapper.Map<List<Application_logDto>>(obj);
-            var fileName = request.tapData == "DUC" ? "reportDUC_Accept.xlsx" : "reportDCC_Accept.xlsx";
-            var filePath = Path.Combine(_env.ContentRootPath, "Files", fileName );
-
-            using var workbook = new XLWorkbook(filePath);
-            var worksheet = workbook.Worksheet("Report");
-
-
-            int autoId = 1;
-            int row = 3;
-
-            foreach (var item in mappList)
-            {
-                item.Id = autoId++;
-
-                worksheet.Cell($"A{row}").Value = item.Id;
-                worksheet.Cell($"B{row}").Value = item.Group_name;
-                worksheet.Cell($"C{row}").Value = item.Username;
-                worksheet.Cell($"D{row}").Value = item.Action;
-                worksheet.Cell($"E{row}").Value = item.Action_date_time;
-                worksheet.Cell($"F{row}").Value = item.Detail;
-                worksheet.Cell($"G{row}").Value = item.Bu;
-                worksheet.Cell($"H{row}").Value = item.Position;
-                worksheet.Cell($"I{row}").Value = item.Resigned_date;
-                worksheet.Cell($"J{row}").Value = item.Days_after_action;
-                worksheet.Cell($"K{row}").Value = item.Event_type;
-                worksheet.Cell($"L{row}").Value = item.Unauthorized;
-                worksheet.Cell($"M{row}").Value = item.Download_more_10_files_day;
-                worksheet.Cell($"N{row}").Value = item.Employee_resigning_within_one_month;
-                if (request.tapData == "DCC")
-                {
-                    worksheet.Cell($"O{row}").Value = item.Is_bu_dcc;
-                    worksheet.Cell($"P{row}").Value = item.Admin_confirm;
-                    worksheet.Cell($"Q{row}").Value = item.Admin_confirm_date;
-                }
-                else
-                {
-                    worksheet.Cell($"O{row}").Value = item.Admin_confirm;
-                    worksheet.Cell($"P{row}").Value = item.Admin_confirm_date;
-                }
-
-
-                    row++;
-            }
-
-            // 3. Apply adjustments and styling only if new rows were added.
-            var newlastRow = row - 1;
-            var rowtapData = request.tapData == "DCC" ? "Q" : "P";
-            var range = worksheet.Range($"A3:{rowtapData}{newlastRow}");
-
-            range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-            range.Style.Border.OutsideBorderColor = XLColor.Black;
-            range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-            range.Style.Border.InsideBorderColor = XLColor.Black;
-
-
-            using var stream = new MemoryStream();
-            workbook.SaveAs(stream);
-            //return Task.FromResult(stream.ToArray());
-            return stream.ToArray();
-        }
-
-        #endregion
+        
 
         #region || ExportExcelLog ||
 
@@ -608,96 +502,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         #endregion
          
-        #region || GetSaveLog confirm ||
-
-        public async Task<ResponseDto> GetSaveLogList(SearchDto request)
-        {
-            try
-            {
-
-                IQueryable<Application_log> applog = _db.Application_Log.Where(x => x.Admin_confirm != null && x.App_log == request.tapData);
-
-                var query = from a in applog
-                            join b in _db.Users_Permission on a.Admin_confirm equals b.emp_no into abgroup
-                            from ab in abgroup.DefaultIfEmpty()
-                            join c in _db.Users_Permission on a.Admin_confirm_edit equals c.emp_no into acgroup
-                            from ac in acgroup.DefaultIfEmpty()
-                          select new SaveDUC_DCC_logDto
-                          {
-                              Id = a.Id,
-                              Group_name = a.Group_name,
-                              Username = a.Username,
-                              Action = a.Action,
-                              Action_date_time = a.Action_date_time,
-                              Detail=a.Detail,
-                              Bu =a.Bu,
-                              Position = a.Position,
-                              Resigned_date = a.Resigned_date,
-                              Days_after_action = a.Days_after_action,
-                              Event_type = a.Event_type,
-                              Unauthorized = a.Unauthorized,
-                              Download_more_10_files_day =a.Download_more_10_files_day,
-                              Employee_resigning_within_one_month = a.Employee_resigning_within_one_month,
-                              Is_bu_dcc = a.Is_bu_dcc,
-                              Admin_confirm =  $"{ab.firstname} {ab.lastname}",
-                              Admin_confirm_date = a.Admin_confirm_date,
-                              Admin_confirm_edit = $"{ac.firstname} {ac.lastname}",
-                              Admin_edit_confirm_date = a.Admin_edit_confirm_date,
-                              Admin_confirm_comment = a.Admin_confirm_comment,
-                              Admin_confirm_event = a.Admin_confirm_event,
-                          };
-
-                if (request != null && request.Search != null && request.Search.Any())
-                {
-                    string searchTerm = request.Search.ToLower();
-
-                    query = query.Where(x =>
-                        x.Group_name!.ToLower().Contains(searchTerm) ||
-                        x.Username!.ToLower().Contains(searchTerm) ||
-                        x.Detail!.ToLower().Contains(searchTerm) ||
-                        x.Action!.ToLower().Contains(searchTerm) ||
-                        x.Bu!.ToLower().Contains(searchTerm) ||
-                        x.Position!.ToLower().Contains(searchTerm) ||
-                        x.Event_type!.ToLower().Contains(searchTerm) ||
-                        x.Unauthorized!.ToLower().Contains(searchTerm) ||
-                        x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
-                        x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-                        x.Admin_confirm!.ToLower().Contains(searchTerm)
-                 );
-                }
-
-
-
-                if (request!.startDate.HasValue)
-                {
-                    DateTime startDate = request.startDate.Value.Date; // เอาเฉพาะส่วนวันที่ (เวลา 00:00:00)
-                    query = query.Where(x => x.Action_date_time >= startDate);
-                }
-
-                if (request.endDate.HasValue)
-                {
-                    DateTime endDateExclusive = request.endDate.Value.Date.AddDays(1); // เอาวันถัดไปตอน 00:00:00
-                    query = query.Where(x => x.Action_date_time < endDateExclusive);
-                }
-
-                 
-
-                IEnumerable<SaveDUC_DCC_logDto> obj = await query.OrderByDescending(a=>a.Action_date_time).ToListAsync();
-               
-                IEnumerable<SaveDUC_DCC_logDto> mappDataList = _mapper.Map<IEnumerable<SaveDUC_DCC_logDto>>(obj);
-
-                _response.Result = mappDataList;
-
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.Message = _message.an_error_occurred + ex.Message;
-            }
-            return _response;
-        }
-         
-        #endregion
+       
 
         #region || SendMail ||
         public async Task<ResponseDto> SendMail()
@@ -714,18 +519,18 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     .ToListAsync();
                 var mappDucList = _mapper.Map<List<Application_logDto>>(objDucList);
 
-                ExportExcleDucSendMail(mappDucList);
+           var ducStreem =  ExportExcleDucSendMail(mappDucList);
 
                 List<Application_log> objDccList = await _db.Application_Log
                  .Where(x => x.Action_date_time >= startDate && x.Action_date_time < endDate && x.App_log == "DCC")
                  .ToListAsync();
                 var mappDccList = _mapper.Map<List<Application_logDto>>(objDccList);
 
-                ExportExcleDccSendMail(mappDccList);
+            var dccStreem =  ExportExcleDccSendMail(mappDccList);
 
 
                 var sb = new StringBuilder();
-
+                #region || HTML Template ||
                 sb.AppendLine(@"<!DOCTYPE html>
                                 <html>
                                 <head>
@@ -840,19 +645,19 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     sb.AppendLine("<h5>&nbsp;&nbsp; The report log is currently empty. </h5>");
                 }
                     sb.AppendLine("</body></html>");
-
+                #endregion
                 string body = sb.ToString();
 
-                string filePathDuc = Path.Combine(_env.ContentRootPath, "Files", "reportDUCSendMail.xlsx");
-                string filePathDcc = Path.Combine(_env.ContentRootPath, "Files", "reportDCCSendMail.xlsx");
+                //string filePathDuc = Path.Combine(_env.ContentRootPath, "Files", "reportDUCSendMail.xlsx");
+                //string filePathDcc = Path.Combine(_env.ContentRootPath, "Files", "reportDCCSendMail.xlsx");
                 var message = new MailMessage();
                 message.From = new MailAddress(_smtpSettings.SenderEmail!, _smtpSettings.SenderName);
                 message.To.Add("apichets@fabrinet.co.th");
                 message.Subject = "AutoMail";
                 message.Body = body;
                 message.IsBodyHtml = true;
-                message.Attachments.Add(new Attachment(filePathDuc));
-                message.Attachments.Add(new Attachment(filePathDcc));
+                message.Attachments.Add(new Attachment(ducStreem,"reportDUCSendmail.xlsx", ContentTypeConfig.Xlsx));
+                message.Attachments.Add(new Attachment(dccStreem,"reportDCCSendmail.xlsx", ContentTypeConfig.Xlsx));
 
 
                 using (var client = new SmtpClient(_smtpSettings.SmtpServer))
@@ -864,6 +669,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     await client.SendMailAsync(message);
                 }
 
+             
                 _response.Message = _message.SendmailSuccess;
 
             }
@@ -975,77 +781,140 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         #endregion
 
         #region || Export Excel send Mail ||
-        private  void  ExportExcleDucSendMail(List<Application_logDto> dataList)
-        {
+        private MemoryStream ExportExcleDucSendMail(List<Application_logDto> dataList)
+        { 
             var filePath = Path.Combine(_env.ContentRootPath, "Files", "reportDUCSendMail.xlsx");
 
-            using var workbook = new XLWorkbook(filePath);
-            var worksheet = workbook.Worksheet("Report");
-            int row = 3;
-            int autoId = 1;
+            using  var workbook = new XLWorkbook(filePath);
+                var worksheet = workbook.Worksheet("Report");
+                int row = 3;
+                int autoId = 1;
 
-            // remove Data
-            int lastRow = worksheet.LastRowUsed()!.RowNumber(); 
-            if(lastRow>= row)
-            {
-                worksheet.Rows(row, lastRow).Delete();
-            }
-            if (dataList.Count > 0)
-            {
-                foreach (var item in dataList)
+                // remove Data
+                int lastRow = worksheet.LastRowUsed()!.RowNumber();
+                if (lastRow >= row)
                 {
-
-                    item.Id = autoId++;
-
-                    worksheet.Cell($"A{row}").Value = item.Id;
-                    worksheet.Cell($"B{row}").Value = item.Group_name;
-                    worksheet.Cell($"C{row}").Value = item.Username;
-                    worksheet.Cell($"D{row}").Value = item.Action;
-                    worksheet.Cell($"E{row}").Value = item.Action_date_time;
-                    worksheet.Cell($"F{row}").Value = item.Detail;
-                    worksheet.Cell($"G{row}").Value = item.Bu;
-                    worksheet.Cell($"H{row}").Value = item.Position;
-                    worksheet.Cell($"I{row}").Value = item.Resigned_date;
-                    worksheet.Cell($"J{row}").Value = item.Days_after_action;
-                    worksheet.Cell($"K{row}").Value = item.Event_type;
-                    worksheet.Cell($"L{row}").Value = item.Unauthorized;
-                    worksheet.Cell($"M{row}").Value = item.Download_more_10_files_day;
-                    worksheet.Cell($"N{row}").Value = item.Employee_resigning_within_one_month;
-
-                    row++;
+                    worksheet.Rows(row, lastRow).Delete();
                 }
-                var newlastRow = row - 1;
-                var range = worksheet.Range($"A3:N{newlastRow}");
+                if (dataList.Count > 0)
+                {
+                    foreach (var item in dataList)
+                    {
 
-                range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                range.Style.Border.OutsideBorderColor = XLColor.Black;
-                range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                range.Style.Border.InsideBorderColor = XLColor.Black;
-            }
-            workbook.Save();
+                        item.Id = autoId++;
+
+                        worksheet.Cell($"A{row}").Value = item.Id;
+                        worksheet.Cell($"B{row}").Value = item.Group_name;
+                        worksheet.Cell($"C{row}").Value = item.Username;
+                        worksheet.Cell($"D{row}").Value = item.Action;
+                        worksheet.Cell($"E{row}").Value = item.Action_date_time;
+                        worksheet.Cell($"F{row}").Value = item.Detail;
+                        worksheet.Cell($"G{row}").Value = item.Bu;
+                        worksheet.Cell($"H{row}").Value = item.Position;
+                        worksheet.Cell($"I{row}").Value = item.Resigned_date;
+                        worksheet.Cell($"J{row}").Value = item.Days_after_action;
+                        worksheet.Cell($"K{row}").Value = item.Event_type;
+                        worksheet.Cell($"L{row}").Value = item.Unauthorized;
+                        worksheet.Cell($"M{row}").Value = item.Download_more_10_files_day;
+                        worksheet.Cell($"N{row}").Value = item.Employee_resigning_within_one_month;
+
+                        row++;
+                    }
+                    var newlastRow = row - 1;
+                    var range = worksheet.Range($"A3:N{newlastRow}");
+
+                    range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                    range.Style.Border.OutsideBorderColor = XLColor.Black;
+                    range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                    range.Style.Border.InsideBorderColor = XLColor.Black;
+                }
+                var ms = new MemoryStream();
+            workbook.SaveAs(ms);
+            ms.Position = 0; // Reset the stream position to the beginning
+            return ms;
+           
+          
         }
 
-        private void ExportExcleDccSendMail(List<Application_logDto> dataList)
+        private MemoryStream ExportExcleDccSendMail(List<Application_logDto> dataList)
         {
+       
             var filePath = Path.Combine(_env.ContentRootPath, "Files", "reportDCCSendMail.xlsx");
 
             using var workbook = new XLWorkbook(filePath);
-            var worksheet = workbook.Worksheet("Report");
-            int row = 3;
-            int autoId = 1;
+           
+                    var worksheet = workbook.Worksheet("Report");
+                    int row = 3;
+                    int autoId = 1;
 
-            // remove Data
-            int lastRow = worksheet.LastRowUsed()!.RowNumber();
-            if (lastRow >= row)
-            {
-                worksheet.Rows(row, lastRow).Delete();
-            }
-            if(dataList.Count > 0)
-            {
+                    // remove Data
+                    int lastRow = worksheet.LastRowUsed()!.RowNumber();
+                    if (lastRow >= row)
+                    {
+                        worksheet.Rows(row, lastRow).Delete();
+                    }
+                    if(dataList.Count > 0)
+                    {
                  
-            foreach (var item in dataList)
-            {
+                    foreach (var item in dataList)
+                    {
 
+                        item.Id = autoId++;
+
+                        worksheet.Cell($"A{row}").Value = item.Id;
+                        worksheet.Cell($"B{row}").Value = item.Group_name;
+                        worksheet.Cell($"C{row}").Value = item.Username;
+                        worksheet.Cell($"D{row}").Value = item.Action;
+                        worksheet.Cell($"E{row}").Value = item.Action_date_time;
+                        worksheet.Cell($"F{row}").Value = item.Detail;
+                        worksheet.Cell($"G{row}").Value = item.Bu;
+                        worksheet.Cell($"H{row}").Value = item.Position;
+                        worksheet.Cell($"I{row}").Value = item.Resigned_date;
+                        worksheet.Cell($"J{row}").Value = item.Days_after_action;
+                        worksheet.Cell($"K{row}").Value = item.Event_type;
+                        worksheet.Cell($"L{row}").Value = item.Unauthorized;
+                        worksheet.Cell($"M{row}").Value = item.Download_more_10_files_day;
+                        worksheet.Cell($"N{row}").Value = item.Employee_resigning_within_one_month;
+                        worksheet.Cell($"O{row}").Value = item.Is_bu_dcc;
+                        row++;
+                    }
+                    var newlastRow = row - 1;
+                    var range = worksheet.Range($"A3:O{newlastRow}");
+
+                    range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                    range.Style.Border.OutsideBorderColor = XLColor.Black;
+                    range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                    range.Style.Border.InsideBorderColor = XLColor.Black;
+
+                    }
+                    var ms = new MemoryStream();
+            workbook.SaveAs(ms);
+            ms.Position = 0; // Reset the stream position to the beginning
+            return ms;
+
+        }
+
+        #endregion
+
+
+
+        #region || ExportExcelAccept || 
+        public async Task<byte[]> ExportExcelAccept(SearchDto request)
+        {
+            var obj = await BuildSaveLogQuery(request)
+                .OrderByDescending(a => a.Action_date_time).ToListAsync();
+            var mappList = _mapper.Map<List<SaveDUC_DCC_logDto>>(obj);
+            var fileName = request.tapData == "DUC" ? "reportDUC_Accept.xlsx" : "reportDCC_Accept.xlsx";
+            var filePath = Path.Combine(_env.ContentRootPath, "Files", fileName);
+
+            using var workbook = new XLWorkbook(filePath);
+            var worksheet = workbook.Worksheet("Report");
+
+            int autoId = 1;
+            int row = 3;
+
+            foreach (var item in mappList)
+            {
                 item.Id = autoId++;
 
                 worksheet.Cell($"A{row}").Value = item.Id;
@@ -1062,21 +931,137 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 worksheet.Cell($"L{row}").Value = item.Unauthorized;
                 worksheet.Cell($"M{row}").Value = item.Download_more_10_files_day;
                 worksheet.Cell($"N{row}").Value = item.Employee_resigning_within_one_month;
-                worksheet.Cell($"O{row}").Value = item.Is_bu_dcc;
+                if (request.tapData == "DCC")
+                {
+                    worksheet.Cell($"O{row}").Value = item.Is_bu_dcc;
+                    worksheet.Cell($"P{row}").Value = item.Admin_confirm;
+                    worksheet.Cell($"Q{row}").Value = item.Admin_confirm_date;
+                }
+                else
+                {
+                    worksheet.Cell($"O{row}").Value = item.Admin_confirm;
+                    worksheet.Cell($"P{row}").Value = item.Admin_confirm_date;
+                }
+
+
                 row++;
             }
+
+            // 3. Apply adjustments and styling only if new rows were added.
             var newlastRow = row - 1;
-            var range = worksheet.Range($"A3:O{newlastRow}");
+            var rowtapData = request.tapData == "DCC" ? "Q" : "P";
+            var range = worksheet.Range($"A3:{rowtapData}{newlastRow}");
 
             range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
             range.Style.Border.OutsideBorderColor = XLColor.Black;
             range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
             range.Style.Border.InsideBorderColor = XLColor.Black;
 
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            //return Task.FromResult(stream.ToArray());
+            return stream.ToArray();
+        }
+        #endregion
+
+        #region || BuildSaveLogQuery || 
+
+        private IQueryable<SaveDUC_DCC_logDto> BuildSaveLogQuery(SearchDto request)
+        {
+            IQueryable<Application_log> applog = _db.Application_Log
+                .Where(x => x.Admin_confirm != null && x.App_log == request.tapData);
+
+            var query = from a in applog
+                        join b in _db.Users_Permission on a.Admin_confirm equals b.emp_no into abgroup
+                        from ab in abgroup.DefaultIfEmpty()
+                        join c in _db.Users_Permission on a.Admin_confirm_edit equals c.emp_no into acgroup
+                        from ac in acgroup.DefaultIfEmpty()
+                        select new SaveDUC_DCC_logDto
+                        {
+                            Id = a.Id,
+                            Group_name = a.Group_name,
+                            Username = a.Username,
+                            Action = a.Action,
+                            Action_date_time = a.Action_date_time,
+                            Detail = a.Detail,
+                            Bu = a.Bu,
+                            Position = a.Position,
+                            Resigned_date = a.Resigned_date,
+                            Days_after_action = a.Days_after_action,
+                            Event_type = a.Event_type,
+                            Unauthorized = a.Unauthorized,
+                            Download_more_10_files_day = a.Download_more_10_files_day,
+                            Employee_resigning_within_one_month = a.Employee_resigning_within_one_month,
+                            Is_bu_dcc = a.Is_bu_dcc,
+                            Admin_confirm = $"{ab.firstname} {ab.lastname}",
+                            Admin_confirm_date = a.Admin_confirm_date,
+                            Admin_confirm_edit = $"{ac.firstname} {ac.lastname}",
+                            Admin_edit_confirm_date = a.Admin_edit_confirm_date,
+                            Admin_confirm_comment = a.Admin_confirm_comment,
+                            Admin_confirm_event = a.Admin_confirm_event,
+                        };
+
+            if (!string.IsNullOrEmpty(request.Search))
+            {
+                string searchTerm = request.Search.ToLower();
+                query = query.Where(x =>
+                    x.Group_name!.ToLower().Contains(searchTerm) ||
+                    x.Username!.ToLower().Contains(searchTerm) ||
+                    x.Detail!.ToLower().Contains(searchTerm) ||
+                    x.Action!.ToLower().Contains(searchTerm) ||
+                    x.Bu!.ToLower().Contains(searchTerm) ||
+                    x.Position!.ToLower().Contains(searchTerm) ||
+                    x.Event_type!.ToLower().Contains(searchTerm) ||
+                    x.Unauthorized!.ToLower().Contains(searchTerm) ||
+                    x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
+                    x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
+                    x.Admin_confirm!.ToLower().Contains(searchTerm)
+                );
             }
-            workbook.Save();
+
+            if (request.startDate.HasValue)
+            {
+                var startDate = request.startDate.Value.Date;
+                query = query.Where(x => x.Action_date_time >= startDate);
+            }
+
+            if (request.endDate.HasValue)
+            {
+                var endDateExclusive = request.endDate.Value.Date.AddDays(1);
+                query = query.Where(x => x.Action_date_time < endDateExclusive);
+            }
+
+            return query;
+        }
+        #endregion
+
+
+        #region || GetSaveLog confirm ||
+
+        public async Task<ResponseDto> GetSaveLogList(SearchDto request)
+        {
+            try
+            {
+                IEnumerable<SaveDUC_DCC_logDto> obj = await BuildSaveLogQuery(request).OrderByDescending(a => a.Action_date_time).ToListAsync();
+                IEnumerable<SaveDUC_DCC_logDto> mappDataList = _mapper.Map<IEnumerable<SaveDUC_DCC_logDto>>(obj);
+
+                _response.Result = mappDataList;
+
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.Message = _message.an_error_occurred + ex.Message;
+            }
+            return _response;
         }
 
         #endregion
+
+
+
+
+
     }
 }
