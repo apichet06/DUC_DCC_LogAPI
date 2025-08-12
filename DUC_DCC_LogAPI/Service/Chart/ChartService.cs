@@ -22,12 +22,12 @@ namespace DUC_DCC_LogAPI.Service.Chart
           
         }
 
-        public async Task<ResponseDto> GetChartBarAsync()
+        public async Task<ResponseDto> GetChartBarAsync(int Year)
         {
             try
             {
 
-
+                #region || backUp ||
                 // var query = from a in _db.Month
                 //             join b in _db.Application_Log on a.Id equals  b.Action_date_time.Month into ab
                 //             from b in ab.DefaultIfEmpty()
@@ -51,16 +51,18 @@ namespace DUC_DCC_LogAPI.Service.Chart
                 //     }).ToListAsync();
 
                 //_response.Result = result;
+                #endregion
 
                 var query = from month in _db.Month
-                            join log in _db.Application_Log
-                                on month.Id equals log.Action_date_time.Month into monthLogs
+                            join log in _db.Application_Log.Where(l => l.Action_date_time.Year == Year)
+                            on month.Id equals log.Action_date_time.Month into monthLogs
                             from ml in monthLogs.DefaultIfEmpty()  
                             group ml by new   
                             {
                                 month.Id,
                                 month.Name,
-                                AppLog = ml.App_log 
+                                AppLog = ml.App_log,
+                               
                             } into g
                            
                             select new BarCharDto
@@ -68,7 +70,8 @@ namespace DUC_DCC_LogAPI.Service.Chart
                                 month = g.Key.Id,
                                 Name = g.Key.Name,
                                 App_log = g.Key.AppLog, 
-                                CountData = g.Count(log => log != null)
+                                CountData = g.Count(log => log != null),
+                                Year = Year
                             };
 
                 var result = await query.OrderBy(a=> a.month).ToListAsync();
@@ -82,21 +85,22 @@ namespace DUC_DCC_LogAPI.Service.Chart
             return _response;
         }
 
-        public async Task<ResponseDto> GetChartDataAsync()
+        public async Task<ResponseDto> GetChartDataAsync(int Year)
         {
             try
             {
 
                 var query = from log in _db.Application_Log
-                            //where log.Admin_confirm == null
+                            where log.Action_date_time.Year == Year
                             group log by log.App_log into logGroup
                             select new ChartDto
                             {
-                                Name = logGroup.Key,    // logGroup.Key คือค่าที่ใช้ group (ในที่นี้คือ app_log)
-                                Count = logGroup.Count() // logGroup.Count() คือจำนวนรายการในแต่ละกลุ่ม
+                                Name = logGroup.Key,    
+                                Count = logGroup.Count(),
+                                Year = Year
                             };
 
-                // สั่งให้ query ทำงานและดึงข้อมูลจากฐานข้อมูล
+            
                 var chartData = await query.ToListAsync();
 
                 _response.Result = chartData;

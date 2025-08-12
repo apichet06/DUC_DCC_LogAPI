@@ -557,13 +557,14 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             try
             {
 
-                IQueryable<Application_log> query = _db.Application_Log.Where(x=>x.Admin_confirm == null && x.App_log == request.tapData);
+                IQueryable<Application_log> query = _db.Application_Log.Where(x=>x.Admin_confirm == null && x.App_log == request.tapData).OrderByDescending(a=>a.Action_date_time);
 
                 if (request != null && request.Search != null && request.Search.Any())
                 {
                     string searchTerm = request.Search.ToLower();
 
                     query = query.Where(x =>
+                        x.Id.ToString().Contains(searchTerm) ||
                         x.Group_name!.ToLower().Contains(searchTerm) ||
                         x.Username!.ToLower().Contains(searchTerm) ||
                         x.Action!.ToLower().Contains(searchTerm) ||
@@ -681,7 +682,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
                  
 
-                IEnumerable<SaveDUC_DCC_logDto> obj = await query.ToListAsync();
+                IEnumerable<SaveDUC_DCC_logDto> obj = await query.OrderByDescending(a=>a.Action_date_time).ToListAsync();
                
                 IEnumerable<SaveDUC_DCC_logDto> mappDataList = _mapper.Map<IEnumerable<SaveDUC_DCC_logDto>>(obj);
 
@@ -703,9 +704,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         {
             try
             {
-      
-
-                DateTime startDate = new DateTime(2025, 7, 13);
+                 
+                DateTime startDate = new DateTime(2025, 8, 8);
                 //DateTime startDate = DateTime.Today;
                 DateTime endDate = startDate.AddDays(1);
 
@@ -714,14 +714,14 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     .ToListAsync();
                 var mappDucList = _mapper.Map<List<Application_logDto>>(objDucList);
 
-                  ExportExcleDucSendMail(mappDucList);
+                ExportExcleDucSendMail(mappDucList);
 
                 List<Application_log> objDccList = await _db.Application_Log
                  .Where(x => x.Action_date_time >= startDate && x.Action_date_time < endDate && x.App_log == "DCC")
                  .ToListAsync();
                 var mappDccList = _mapper.Map<List<Application_logDto>>(objDccList);
 
-                 ExportExcleDccSendMail(mappDccList);
+                ExportExcleDccSendMail(mappDccList);
 
 
                 var sb = new StringBuilder();
@@ -733,13 +733,13 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                 #customers {
                                   font-family: Arial, Helvetica, sans-serif;
                                   border-collapse: collapse;
-                                  width: 100%;
-                                  font-size: 10px;
+                                  width: 100%; 
                                 }
 
                                 #customers td, #customers th {
                                   border: 1px solid #ddd;
-                                  padding: 8px;
+                                  padding: 5px;
+                                  font-size: 11px;
                                 }
 
                                 #customers tr:nth-child(even) {background-color: #f2f2f2;}
@@ -747,8 +747,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                 #customers tr:hover {background-color: #ddd;}
 
                                 #customers th {
-                                  padding-top: 12px;
-                                  padding-bottom: 12px;
+                                  padding-top: 7px;
+                                  padding-bottom: 7px;
                                   text-align: left;
                                   background-color: #04AA6D;
                                   color: white;
@@ -756,8 +756,11 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                 </style>
                                 </head>
                                 <body>");
-
-                sb.AppendLine("<h1>DUC Report</h1>");
+                sb.AppendLine(@"<a href=""https://fits/CRUDLogs/applog/report-log"">Go to website</a>");
+                sb.AppendLine("<h4>DUC Report</h4>");
+                if(objDucList.Count > 0)
+                {
+                     
                 sb.AppendLine(@"<table id=""customers"">
                     <tr>
                       <th>NO</th>
@@ -766,16 +769,16 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                       <th>ACTION DATE/TIME</th>
                       <th>DETAIL</th>
                       <th>BU</th>
-                      <th>POSITION</th>
-                      <th>RESIGNED DATE</th>
-                      <th>DAYS AFTER ACTION</th>
-                      <th>Event type</th> 
+                      <th>POSITION</th> 
+                      <th>Event type</th>
+                      <th>Link Web</th>  
                     </tr>");
 
                 int ducIndex = 1;
                 foreach (var log in objDucList)
                 {
-                    sb.AppendLine($@"
+                        var events = log.Event_type == "Usual Event" ? "black" : "red";
+                        sb.AppendLine($@"
                         <tr>
                           <td>{ducIndex++}</td>
                           <td>{log.Group_name}</td>
@@ -783,16 +786,22 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                           <td>{log.Action_date_time:yyyy-MM-dd HH:mm:ss}</td>
                           <td>{log.Detail}</td>
                           <td>{log.Bu}</td>
-                          <td>{log.Position}</td>
-                          <td>{(log.Resigned_date.HasValue ? log.Resigned_date.Value.ToString("yyyy-MM-dd") : "")}</td>
-                          <td>{(log.Days_after_action)}</td>
-                          <td>{log.Event_type}</td>
+                          <td>{log.Position}</td> 
+                          <td style=""color: {events};"">{log.Event_type}</td>
+                          <td><a href=""https://fits/CRUDLogs/applog/report-logId/{log.Id}/{log.App_log}"">Click</a></td>
                         </tr>");
                 }
 
                 sb.AppendLine("</table>");
+                }
+                else
+                {
+                    sb.AppendLine("<h5>&nbsp;&nbsp;The report log is currently empty.</h5>");
+                }
 
-                sb.AppendLine("<h1>DCC Report</h1>");
+                    sb.AppendLine("<h4>DCC Report</h4>");
+                if (objDccList.Count > 0)
+                { 
                 sb.AppendLine(@"<table id=""customers"">
                     <tr>
                       <th>NO</th>
@@ -801,16 +810,16 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                       <th>ACTION DATE/TIME</th>
                       <th>DETAIL</th>
                       <th>BU</th>
-                      <th>POSITION</th>
-                      <th>RESIGNED DATE</th>
-                      <th>DAYS AFTER ACTION</th>
-                      <th>Event type</th> 
+                      <th>POSITION</th> 
+                      <th>Event type</th>
+                      <th>Link Web</th>  
                     </tr>");
 
-                                int dccIndex = 1;
-                        foreach (var log in objDccList)
-                        { 
-                                sb.AppendLine($@"
+                int dccIndex = 1;
+                foreach (var log in objDccList)
+                {
+                      var events =  log.Event_type== "Usual Event" ?  "black":"red";
+                    sb.AppendLine($@"
                                 <tr>
                                   <td>{dccIndex++}</td>
                                   <td>{log.Group_name}</td>
@@ -818,17 +827,19 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                   <td>{log.Action_date_time:yyyy-MM-dd HH:mm:ss}</td>
                                   <td>{log.Detail}</td>
                                   <td>{log.Bu}</td>
-                                  <td>{log.Position}</td>
-                                  <td>{(log.Resigned_date.HasValue ? log.Resigned_date.Value.ToString("yyyy-MM-dd") : "")}</td>
-                                  <td>{log.Days_after_action}</td>
-                                  <td>{log.Event_type}</td>
+                                  <td>{log.Position}</td> 
+                                  <td style=""color: {events};"">{log.Event_type}</td>
+                                  <td><a href=""https://fits/CRUDLogs/applog/report-logId/{log.Id}/{log.App_log}"">Click</a></td>
                                 </tr>");
-                         
-                }
-            
 
+                } 
                 sb.AppendLine("</table>");
-                sb.AppendLine("</body></html>");
+                }
+                else
+                {
+                    sb.AppendLine("<h5>&nbsp;&nbsp; The report log is currently empty. </h5>");
+                }
+                    sb.AppendLine("</body></html>");
 
                 string body = sb.ToString();
 
@@ -979,36 +990,38 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             {
                 worksheet.Rows(row, lastRow).Delete();
             }
-
-            foreach (var item in dataList)
+            if (dataList.Count > 0)
             {
+                foreach (var item in dataList)
+                {
 
-                item.Id = autoId++;
+                    item.Id = autoId++;
 
-                worksheet.Cell($"A{row}").Value = item.Id;
-                worksheet.Cell($"B{row}").Value = item.Group_name;
-                worksheet.Cell($"C{row}").Value = item.Username;
-                worksheet.Cell($"D{row}").Value = item.Action;
-                worksheet.Cell($"E{row}").Value = item.Action_date_time;
-                worksheet.Cell($"F{row}").Value = item.Detail;
-                worksheet.Cell($"G{row}").Value = item.Bu;
-                worksheet.Cell($"H{row}").Value = item.Position;
-                worksheet.Cell($"I{row}").Value = item.Resigned_date;
-                worksheet.Cell($"J{row}").Value = item.Days_after_action;
-                worksheet.Cell($"K{row}").Value = item.Event_type;
-                worksheet.Cell($"L{row}").Value = item.Unauthorized;
-                worksheet.Cell($"M{row}").Value = item.Download_more_10_files_day;
-                worksheet.Cell($"N{row}").Value = item.Employee_resigning_within_one_month;
-  
-                row++;
+                    worksheet.Cell($"A{row}").Value = item.Id;
+                    worksheet.Cell($"B{row}").Value = item.Group_name;
+                    worksheet.Cell($"C{row}").Value = item.Username;
+                    worksheet.Cell($"D{row}").Value = item.Action;
+                    worksheet.Cell($"E{row}").Value = item.Action_date_time;
+                    worksheet.Cell($"F{row}").Value = item.Detail;
+                    worksheet.Cell($"G{row}").Value = item.Bu;
+                    worksheet.Cell($"H{row}").Value = item.Position;
+                    worksheet.Cell($"I{row}").Value = item.Resigned_date;
+                    worksheet.Cell($"J{row}").Value = item.Days_after_action;
+                    worksheet.Cell($"K{row}").Value = item.Event_type;
+                    worksheet.Cell($"L{row}").Value = item.Unauthorized;
+                    worksheet.Cell($"M{row}").Value = item.Download_more_10_files_day;
+                    worksheet.Cell($"N{row}").Value = item.Employee_resigning_within_one_month;
+
+                    row++;
+                }
+                var newlastRow = row - 1;
+                var range = worksheet.Range($"A3:N{newlastRow}");
+
+                range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                range.Style.Border.OutsideBorderColor = XLColor.Black;
+                range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                range.Style.Border.InsideBorderColor = XLColor.Black;
             }
-            var newlastRow = row - 1;
-            var range = worksheet.Range($"A3:N{newlastRow}");
-
-            range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-            range.Style.Border.OutsideBorderColor = XLColor.Black;
-            range.Style.Border.InsideBorder =XLBorderStyleValues.Thin;
-            range.Style.Border.InsideBorderColor = XLColor.Black;
             workbook.Save();
         }
 
@@ -1027,7 +1040,9 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             {
                 worksheet.Rows(row, lastRow).Delete();
             }
-
+            if(dataList.Count > 0)
+            {
+                 
             foreach (var item in dataList)
             {
 
@@ -1057,6 +1072,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             range.Style.Border.OutsideBorderColor = XLColor.Black;
             range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
             range.Style.Border.InsideBorderColor = XLColor.Black;
+
+            }
             workbook.Save();
         }
 

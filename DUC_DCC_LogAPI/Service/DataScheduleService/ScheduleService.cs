@@ -36,10 +36,10 @@ namespace DUC_DCC_LogAPI.Service.DccService
         {
             try
             {
-                //DateTime formattedDate = new DateTime(2025, 7, 13);
+                DateTime formattedDate = new DateTime(2025, 8, 8);
                 //DateTime endDate = startDate.AddDays(1);
 
-                DateTime formattedDate = DateTime.Today.AddDays(-1);
+                //DateTime formattedDate = DateTime.Today.AddDays(-1);
                 string formattedDate1 = formattedDate.ToString("yyyy-MM-dd");
                 var response = await _httpClient.GetAsync($"{_dccApiUrl}&action_datetime={formattedDate1}");
                 response.EnsureSuccessStatusCode();
@@ -59,8 +59,10 @@ namespace DUC_DCC_LogAPI.Service.DccService
 
                     foreach (var batch in todos.Chunk(batchSize))
                     {
+                        
                         var entities = batch.Select(t => new Application_log
                         {
+                            
                             Group_name = t.Group_name,
                             Username = t.Username,
                             Action = t.Action,
@@ -77,7 +79,11 @@ namespace DUC_DCC_LogAPI.Service.DccService
                             Unauthorized = t.Unauthorized,
                             Upload_datetime = DateTime.Now
                         }).ToList();
-
+                         
+                    var  dataapp = await _dbContext.Application_Log.FirstOrDefaultAsync(
+                        a=>a.Group_name == entities[0].Group_name && a.Username == entities[0].Username && a.Action == entities[0].Action && 
+                        a.Action_date_time == entities[0].Action_date_time && a.Detail == entities[0].Detail);
+                        if(dataapp == null)
                         await _dbContext.AddRangeAsync(entities); // ถ้าต้องการใส่ options หรือ token สามารถเพิ่มได้
                         //Console.WriteLine($"Inserted batch of {entities.Count} items.");
                     }
@@ -138,10 +144,14 @@ namespace DUC_DCC_LogAPI.Service.DccService
                             Resigned_date = t.Resigned_date,
                             Unauthorized = t.Unauthorized,
                             App_log = "DCC",
-                            Upload_datetime = DateTime.Now
-
+                            Upload_datetime = DateTime.Now 
                         }).ToList();
-                        await _dbContext.AddRangeAsync(entities);
+
+                        var dataapp = await _dbContext.Application_Log.FirstOrDefaultAsync(
+                            a => a.Group_name == entities[0].Group_name && a.Username == entities[0].Username && a.Action == entities[0].Action && 
+                            a.Action_date_time == entities[0].Action_date_time && a.Detail == entities[0].Detail );
+                        if (dataapp == null)
+                            await _dbContext.AddRangeAsync(entities);
                     }
                     await _dbContext.SaveChangesAsync();
                     _response.Message = _message.InsertMessage;

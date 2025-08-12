@@ -12,16 +12,16 @@ namespace DUC_DCC_LogAPI.Controllers
     {
         private readonly IChart _chart = chart;
 
-        [HttpGet]
-        public async Task<IActionResult> GetChart()
+        [HttpGet("{Year}")]
+        public async Task<IActionResult> GetChart(int Year)
         {
-            var results = await _chart.GetChartDataAsync();
+            var results = await _chart.GetChartDataAsync(Year);
             return Ok(results);
         }
-        [HttpGet("BarChart")]
-        public async Task<IActionResult> GetBarChart()
+        [HttpGet("BarChart/{Year}")]
+        public async Task<IActionResult> GetBarChart(int Year)
         {
-            var results = await _chart.GetChartBarAsync();
+            var results = await _chart.GetChartBarAsync(Year);
             return Ok(results);
         }
     }
