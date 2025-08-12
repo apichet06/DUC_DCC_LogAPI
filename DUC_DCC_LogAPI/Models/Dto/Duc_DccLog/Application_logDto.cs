@@ -18,6 +18,7 @@
         public string? Employee_resigning_within_one_month { get; set; }
         public string? Is_bu_dcc { get; set; }
         public string? Admin_confirm { get; set; }
+        public string? App_log { get; set; }
         public DateTime? Admin_confirm_date { get; set; }
         public string? Admin_confirm_edit { get; set; }
         public DateTime? Admin_edit_confirm_date { get; set; }

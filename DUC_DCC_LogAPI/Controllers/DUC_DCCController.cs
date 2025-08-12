@@ -27,6 +27,13 @@ namespace DUC_DCC_LogAPI.Controllers
 
         }
 
+        [HttpGet("ReportLog/{id:int}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var result = await _DCC_Log.GetById(id); 
+            return Ok(result);
+        }
+
         [HttpGet("SaveReportLog")]
         public async Task<IActionResult> GetSavelog([FromQuery] SearchDto request)
         {
@@ -35,10 +42,18 @@ namespace DUC_DCC_LogAPI.Controllers
         }
 
 
-        [HttpPut]
+        [HttpPut()]
         public async Task<IActionResult> Put([FromBody] CheckedDataDto request)
         {
             var results = await _DCC_Log.UpdateList(request);
+            return Ok(results);
+        }
+
+
+        [HttpPut("AcceptById/{id:int}")]
+        public async Task<IActionResult> putAcceptById([FromBody] DataAcceptByIdDto request, int id)
+        {
+            var results = await _DCC_Log.DataAcceptById(request, id);
             return Ok(results);
         }
 

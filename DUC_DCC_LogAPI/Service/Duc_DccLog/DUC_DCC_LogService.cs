@@ -445,6 +445,61 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         #endregion
 
+        #region || GetById || 
+        public async Task<ResponseDto> GetById(int id)
+        {
+            try
+            {
+
+                //IQueryable<Application_log> applog = _db.Application_Log.Where(x => x.Id == id);
+                var obj =  await( from a in _db.Application_Log
+                                  join b in _db.Users_Permission on a.Admin_confirm equals b.emp_no into userGroup
+                                from b in userGroup.DefaultIfEmpty()  
+                               where a.Id == id
+                             select new Application_logDto
+                                {
+                                    Id = id,
+                                    Group_name = a.Group_name,
+                                    Username = a.Username,
+                                    Action = a.Action,
+                                    Action_date_time = a.Action_date_time,
+                                    Detail = a.Detail,
+                                    Bu = a.Bu,
+                                    Position = a.Position,
+                                    Resigned_date = a.Resigned_date,
+                                    Days_after_action = a.Days_after_action,
+                                    Event_type = a.Event_type,
+                                    Unauthorized = a.Unauthorized,
+                                    Download_more_10_files_day = a.Download_more_10_files_day,
+                                    Employee_resigning_within_one_month = a.Employee_resigning_within_one_month,
+                                    Is_bu_dcc = a.Is_bu_dcc,
+                                    Admin_confirm = $"{b.firstname} {b.lastname}",
+                                    Admin_confirm_date = a.Admin_confirm_date,
+                                    Admin_confirm_comment = a.Admin_confirm_comment,
+                                    Admin_confirm_event = a.Admin_confirm_event, 
+
+                                }).ToListAsync();
+
+                if (obj == null)
+                {
+                    _response.IsSuccess = false;
+                    _response.Message = _message.Not_found;
+                }
+                else
+                {
+                  
+                    _response.Result = obj;
+                }
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.Message = _message.an_error_occurred + ex.Message;
+            }
+            return _response;
+        }
+        #endregion
+
         #region || GetList ||
         public async Task<ResponseDto>GetList(SearchDto request)
         {
@@ -502,8 +557,6 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         #endregion
          
-       
-
         #region || SendMail ||
         public async Task<ResponseDto> SendMail()
         {
@@ -684,6 +737,45 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         }
         #endregion
 
+        #region || AccceptDataById ||
+        public async Task<ResponseDto> DataAcceptById(DataAcceptByIdDto request, int id)
+        {
+            try
+            {
+
+                var applicationLog = await _db.Application_Log.FirstOrDefaultAsync(a => a.Id == id);
+                if (applicationLog == null)
+                {
+                    _response.IsSuccess = false;
+                    _response.Message = "ไม่พบข้อมูล Log ที่ต้องการอนุมัติ"; // ข้อความที่เป็นมิตรกับผู้ใช้
+                    return _response;
+                }
+                var user = await _db.Users_Permission.FirstOrDefaultAsync(u => u.emp_email == request.Admin_confirm);
+                if (user == null)
+                {
+                    _response.IsSuccess = false;
+                    _response.Message = "ไม่พบข้อมูลผู้ใช้ที่ทำการอนุมัติ";
+                    return _response;
+                } 
+                applicationLog.Admin_confirm = user.emp_no;
+                applicationLog.Admin_confirm_comment = request.Admin_confirm_comment;
+                applicationLog.Admin_confirm_date = DateTime.Now;
+                applicationLog.Admin_confirm_event = request.Admin_confirm_event;
+                //_db.Application_Log.Update(sqlApplication_Log); 
+                await _db.SaveChangesAsync();
+                _response.IsSuccess = true;
+                _response.Message = _message.UpdateMessage;
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.Message = _message.an_error_occurred + ex.Message;
+            }
+            return _response;
+        }
+
+        #endregion
+
         #region || EditDataAccept แก้ไขหลังจากบันทึกไปแล้ว || 
         public async Task<ResponseDto> EditDataAccept(EditDataAcceptDto request, int id)
         {
@@ -727,7 +819,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         #endregion
 
 
-        #region || UpdateList ||
+        #region || Update Comfirmed Reportlog ||
         public async Task<ResponseDto> UpdateList(CheckedDataDto request)
         {
             try
@@ -896,8 +988,6 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         #endregion
 
-
-
         #region || ExportExcelAccept || 
         public async Task<byte[]> ExportExcelAccept(SearchDto request)
         {
@@ -936,11 +1026,20 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     worksheet.Cell($"O{row}").Value = item.Is_bu_dcc;
                     worksheet.Cell($"P{row}").Value = item.Admin_confirm;
                     worksheet.Cell($"Q{row}").Value = item.Admin_confirm_date;
+                    worksheet.Cell($"R{row}").Value = item.Admin_confirm_edit; 
+                    worksheet.Cell($"S{row}").Value = item.Admin_edit_confirm_date;
+                    worksheet.Cell($"T{row}").Value = item.Admin_confirm_comment;
+                    worksheet.Cell($"U{row}").Value = item.Admin_confirm_event;
+                    
                 }
                 else
                 {
                     worksheet.Cell($"O{row}").Value = item.Admin_confirm;
                     worksheet.Cell($"P{row}").Value = item.Admin_confirm_date;
+                    worksheet.Cell($"Q{row}").Value = item.Admin_confirm_edit;
+                    worksheet.Cell($"R{row}").Value = item.Admin_edit_confirm_date;
+                    worksheet.Cell($"S{row}").Value = item.Admin_confirm_comment;
+                    worksheet.Cell($"T{row}").Value = item.Admin_confirm_event;
                 }
 
 
@@ -949,7 +1048,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
             // 3. Apply adjustments and styling only if new rows were added.
             var newlastRow = row - 1;
-            var rowtapData = request.tapData == "DCC" ? "Q" : "P";
+            var rowtapData = request.tapData == "DCC" ? "U" : "T";
             var range = worksheet.Range($"A3:{rowtapData}{newlastRow}");
 
             range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
@@ -1036,7 +1135,6 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         }
         #endregion
 
-
         #region || GetSaveLog confirm ||
 
         public async Task<ResponseDto> GetSaveLogList(SearchDto request)
@@ -1057,6 +1155,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             return _response;
         }
 
+  
         #endregion
 
 
