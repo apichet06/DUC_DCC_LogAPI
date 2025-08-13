@@ -205,11 +205,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         //    }
         //}
         #endregion
-
-
-
-        
-
+          
         #region || ExportExcelLog ||
 
         public async Task<byte[]> ExportExcelLog(SearchDto request)
@@ -646,7 +642,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                           <td>{log.Bu}</td>
                           <td>{log.Position}</td> 
                           <td style=""color: {events};"">{log.Event_type}</td>
-                          <td><a href=""https://fits/CRUDLogs/applog/report-logId/{log.Id}/{log.App_log}"">Click</a></td>
+                          <td><a href=""https://fits/CRUDLogs/applog/report-log/{log.Id}/{log.App_log}"">Click</a></td>
                         </tr>");
                 }
 
@@ -687,7 +683,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                   <td>{log.Bu}</td>
                                   <td>{log.Position}</td> 
                                   <td style=""color: {events};"">{log.Event_type}</td>
-                                  <td><a href=""https://fits/CRUDLogs/applog/report-logId/{log.Id}/{log.App_log}"">Click</a></td>
+                                  <td><a href=""https://fits/CRUDLogs/applog/report-log/{log.Id}/{log.App_log}"">Click</a></td>
                                 </tr>");
 
                 } 
@@ -1114,8 +1110,9 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     x.Event_type!.ToLower().Contains(searchTerm) ||
                     x.Unauthorized!.ToLower().Contains(searchTerm) ||
                     x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
-                    x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-                    x.Admin_confirm!.ToLower().Contains(searchTerm)
+                    x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) 
+                       //x.Admin_confirm!.ToLower().Contains(searchTerm)
+                    //(x.ab != null && (x.ab.firstname + " " + x.ab.lastname).ToLower().Contains(searchTerm))
                 );
             }
 

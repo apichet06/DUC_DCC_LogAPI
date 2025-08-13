@@ -154,9 +154,10 @@ namespace DUC_DCC_LogAPI.Service.DccService
                             await _dbContext.AddRangeAsync(entities);
                     }
                     await _dbContext.SaveChangesAsync();
+                    _response.Result = $"{startDate} TO {endDate}"; 
                     _response.Message = _message.InsertMessage;
                 }
-
+              
             }
             catch (Exception ex) {
 
