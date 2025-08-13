@@ -8,6 +8,7 @@ using DUC_DCC_LogAPI.Models.Dto;
 using DUC_DCC_LogAPI.Models.Dto.Duc_DccLog;
 using DUC_DCC_LogAPI.Models.Dto.SaveDuc_DccLog; 
 using DUC_DCC_LogAPI.Models.Dtos;
+using MailKit.Search;
 using Microsoft.EntityFrameworkCore;
  
 
@@ -210,7 +211,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         public async Task<byte[]> ExportExcelLog(SearchDto request)
         {
-            IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Admin_confirm == null && x.App_log == request.tapData);
+            IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Admin_confirm == null && x.App_log == request.tapData && (x.Event_type == request.CheckBoxkUsual || x.Event_type == request.CheckBoxkUnusual));
 
             //if (query == null)
             //      _response.Message = _message.Not_found;
@@ -221,17 +222,17 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 string searchTerm = request.Search.ToLower();
 
                 query = query.Where(x =>
-                    x.Group_name!.ToLower().Contains(searchTerm) ||
-                    x.Username!.ToLower().Contains(searchTerm) ||
-                    x.Action!.ToLower().Contains(searchTerm) ||
-                    x.Detail!.ToLower().Contains(searchTerm) ||
-                    x.Bu!.ToLower().Contains(searchTerm) ||
-                    x.Position!.ToLower().Contains(searchTerm) ||
-                    x.Event_type!.ToLower().Contains(searchTerm) ||
-                    x.Unauthorized!.ToLower().Contains(searchTerm) ||
-                    x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
-                    x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-                    x.Admin_confirm!.ToLower().Contains(searchTerm));
+                    x.Group_name!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.Username!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.Action!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.Detail!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.Bu!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.Position!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.Event_type!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.Unauthorized!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.Download_more_10_files_day!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.Admin_confirm!.ToLower().Contains(searchTerm.Trim()));
             }
 
             if (request!.startDate.HasValue)
@@ -496,31 +497,32 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         }
         #endregion
 
-        #region || GetList ||
+        #region || GetList Application Log||
         public async Task<ResponseDto>GetList(SearchDto request)
         {
             try
             {
 
-                IQueryable<Application_log> query = _db.Application_Log.Where(x=>x.Admin_confirm == null && x.App_log == request.tapData).OrderByDescending(a=>a.Action_date_time);
+                IQueryable<Application_log> query = _db.Application_Log.Where(x=>x.Admin_confirm == null && x.App_log == request.tapData && (x.Event_type == request.CheckBoxkUsual || x.Event_type == request.CheckBoxkUnusual))
+                     .OrderByDescending(a=>a.Action_date_time);
 
                 if (request != null && request.Search != null && request.Search.Any())
                 {
                     string searchTerm = request.Search.ToLower();
 
                     query = query.Where(x =>
-                        x.Id.ToString().Contains(searchTerm) ||
-                        x.Group_name!.ToLower().Contains(searchTerm) ||
-                        x.Username!.ToLower().Contains(searchTerm) ||
-                        x.Action!.ToLower().Contains(searchTerm) ||
-                        x.Detail!.ToLower().Contains(searchTerm) ||
-                        x.Bu!.ToLower().Contains(searchTerm) ||
-                        x.Position!.ToLower().Contains(searchTerm) ||
-                        x.Event_type!.ToLower().Contains(searchTerm) ||
-                        x.Unauthorized!.ToLower().Contains(searchTerm) ||
-                        x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
-                        x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) ||
-                        x.Admin_confirm!.ToLower().Contains(searchTerm));
+                        x.Id.ToString().Contains(searchTerm.Trim()) ||
+                        x.Group_name!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Username!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Action!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Detail!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Bu!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Position!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Event_type!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Unauthorized!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Download_more_10_files_day!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Admin_confirm!.ToLower().Contains(searchTerm.Trim()));
                        
                 }
 
@@ -834,7 +836,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                             .Where(log => request.Id!.Contains(log.Id))
                                             .ToListAsync();
 
-                if (!logsToUpdate.Any())
+                if (!logsToUpdate.Any())  
                 {
                     _response.IsSuccess = false;
                     _response.Message = "No matching records found.";
@@ -1065,7 +1067,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         private IQueryable<SaveDUC_DCC_logDto> BuildSaveLogQuery(SearchDto request)
         {
             IQueryable<Application_log> applog = _db.Application_Log
-                .Where(x => x.Admin_confirm != null && x.App_log == request.tapData);
+                .Where(x => x.Admin_confirm != null && x.App_log == request.tapData && (x.Event_type == request.CheckBoxkUsual || x.Event_type == request.CheckBoxkUnusual));
 
             var query = from a in applog
                         join b in _db.Users_Permission on a.Admin_confirm equals b.emp_no into abgroup
@@ -1101,18 +1103,15 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             {
                 string searchTerm = request.Search.ToLower();
                 query = query.Where(x =>
-                    x.Group_name!.ToLower().Contains(searchTerm) ||
-                    x.Username!.ToLower().Contains(searchTerm) ||
-                    x.Detail!.ToLower().Contains(searchTerm) ||
-                    x.Action!.ToLower().Contains(searchTerm) ||
-                    x.Bu!.ToLower().Contains(searchTerm) ||
-                    x.Position!.ToLower().Contains(searchTerm) ||
-                    x.Event_type!.ToLower().Contains(searchTerm) ||
-                    x.Unauthorized!.ToLower().Contains(searchTerm) ||
-                    x.Download_more_10_files_day!.ToLower().Contains(searchTerm) ||
-                    x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm) 
-                       //x.Admin_confirm!.ToLower().Contains(searchTerm)
-                    //(x.ab != null && (x.ab.firstname + " " + x.ab.lastname).ToLower().Contains(searchTerm))
+                    x.Group_name!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.Username!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.Detail!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.Action!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.Bu!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.Position!.ToLower().Contains(searchTerm.Trim()) || 
+                    x.Unauthorized!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.Download_more_10_files_day!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm.Trim())  
                 );
             }
 
