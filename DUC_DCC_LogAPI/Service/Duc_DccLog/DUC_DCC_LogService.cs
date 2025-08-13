@@ -1066,55 +1066,60 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         private IQueryable<SaveDUC_DCC_logDto> BuildSaveLogQuery(SearchDto request)
         {
-            IQueryable<Application_log> applog = _db.Application_Log
-                .Where(x => x.Admin_confirm != null && x.App_log == request.tapData && (x.Event_type == request.CheckBoxkUsual || x.Event_type == request.CheckBoxkUnusual));
+            // เตรียม applog ตามเงื่อนไขหลัก
+            var applog = _db.Application_Log
+                .Where(x => x.Admin_confirm != null
+                    && x.App_log == request.tapData
+                    && (x.Event_type == request.CheckBoxkUsual || x.Event_type == request.CheckBoxkUnusual));
 
-            var query = from a in applog
-                        join b in _db.Users_Permission on a.Admin_confirm equals b.emp_no into abgroup
-                        from ab in abgroup.DefaultIfEmpty()
-                        join c in _db.Users_Permission on a.Admin_confirm_edit equals c.emp_no into acgroup
-                        from ac in acgroup.DefaultIfEmpty()
+            // join + search ในฝั่ง DB
+            var applogWithJoin = from a in applog
+                                 join b in _db.Users_Permission on a.Admin_confirm equals b.emp_no into abgroup
+                                 from ab in abgroup.DefaultIfEmpty()
+                                 join c in _db.Users_Permission on a.Admin_confirm_edit equals c.emp_no into acgroup
+                                 from ac in acgroup.DefaultIfEmpty()
+                                 where string.IsNullOrEmpty(request.Search) || (
+                                       (a.Group_name ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       (a.Username ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       (a.Detail ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       (a.Action ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       (a.Bu ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       (a.Position ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       (a.Unauthorized ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       (a.Download_more_10_files_day ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       (a.Employee_resigning_within_one_month ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       ((ab.firstname + " " + ab.lastname) ?? "").ToLower().Contains(request.Search.ToLower().Trim()) // ✅ ค้นหา Admin_confirm
+                                 )
+                                 select new { a, ab, ac };
+
+            // สร้าง DTO
+            var query = from x in applogWithJoin
                         select new SaveDUC_DCC_logDto
                         {
-                            Id = a.Id,
-                            Group_name = a.Group_name,
-                            Username = a.Username,
-                            Action = a.Action,
-                            Action_date_time = a.Action_date_time,
-                            Detail = a.Detail,
-                            Bu = a.Bu,
-                            Position = a.Position,
-                            Resigned_date = a.Resigned_date,
-                            Days_after_action = a.Days_after_action,
-                            Event_type = a.Event_type,
-                            Unauthorized = a.Unauthorized,
-                            Download_more_10_files_day = a.Download_more_10_files_day,
-                            Employee_resigning_within_one_month = a.Employee_resigning_within_one_month,
-                            Is_bu_dcc = a.Is_bu_dcc,
-                            Admin_confirm = $"{ab.firstname} {ab.lastname}",
-                            Admin_confirm_date = a.Admin_confirm_date,
-                            Admin_confirm_edit = $"{ac.firstname} {ac.lastname}",
-                            Admin_edit_confirm_date = a.Admin_edit_confirm_date,
-                            Admin_confirm_comment = a.Admin_confirm_comment,
-                            Admin_confirm_event = a.Admin_confirm_event,
+                            Id = x.a.Id,
+                            Group_name = x.a.Group_name,
+                            Username = x.a.Username,
+                            Action = x.a.Action,
+                            Action_date_time = x.a.Action_date_time,
+                            Detail = x.a.Detail,
+                            Bu = x.a.Bu,
+                            Position = x.a.Position,
+                            Resigned_date = x.a.Resigned_date,
+                            Days_after_action = x.a.Days_after_action,
+                            Event_type = x.a.Event_type,
+                            Unauthorized = x.a.Unauthorized,
+                            Download_more_10_files_day = x.a.Download_more_10_files_day,
+                            Employee_resigning_within_one_month = x.a.Employee_resigning_within_one_month,
+                            Is_bu_dcc = x.a.Is_bu_dcc,
+                            Admin_confirm = $"{x.ab.firstname} {x.ab.lastname}",
+                            Admin_confirm_date = x.a.Admin_confirm_date,
+                            Admin_confirm_edit = $"{x.ac.firstname} {x.ac.lastname}",
+                            Admin_edit_confirm_date = x.a.Admin_edit_confirm_date,
+                            Admin_confirm_comment = x.a.Admin_confirm_comment,
+                            Admin_confirm_event = x.a.Admin_confirm_event,
                         };
 
-            if (!string.IsNullOrEmpty(request.Search))
-            {
-                string searchTerm = request.Search.ToLower();
-                query = query.Where(x =>
-                    x.Group_name!.ToLower().Contains(searchTerm.Trim()) ||
-                    x.Username!.ToLower().Contains(searchTerm.Trim()) ||
-                    x.Detail!.ToLower().Contains(searchTerm.Trim()) ||
-                    x.Action!.ToLower().Contains(searchTerm.Trim()) ||
-                    x.Bu!.ToLower().Contains(searchTerm.Trim()) ||
-                    x.Position!.ToLower().Contains(searchTerm.Trim()) || 
-                    x.Unauthorized!.ToLower().Contains(searchTerm.Trim()) ||
-                    x.Download_more_10_files_day!.ToLower().Contains(searchTerm.Trim()) ||
-                    x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm.Trim())  
-                );
-            }
-
+            // filter วันที่
             if (request.startDate.HasValue)
             {
                 var startDate = request.startDate.Value.Date;
@@ -1129,6 +1134,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
             return query;
         }
+
         #endregion
 
         #region || GetSaveLog confirm ||
