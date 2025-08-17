@@ -35,8 +35,8 @@ namespace DUC_DCC_LogAPI.Controllers
 
             //HttpContext.Response.Cookies.Append("username", userName);
             //HttpContext.Response.Cookies.Append("authToken", authResult.token!);
-            //return Redirect("http://localhost:5173/CRUDLogs/applog/");
-            return Redirect("https://fits/CRUDLogs/applog");
+            return Redirect("http://localhost:5173/CRUDLogs/applog/");
+            //return Redirect("https://fits/CRUDLogs/applog");
 
             #region || backup ||
             //var userJson = System.Text.Json.JsonSerializer.Serialize(authResult.User);

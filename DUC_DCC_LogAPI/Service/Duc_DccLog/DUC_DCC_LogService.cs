@@ -461,8 +461,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                     Action = a.Action,
                                     Action_date_time = a.Action_date_time,
                                     Detail = a.Detail,
-                                    Bu = a.Bu,
-                                    Position = a.Position,
+                                    Bu = a.Bu == null ? "-":a.Bu,
+                                    Position = a.Position == null ? "-":a.Position,
                                     Resigned_date = a.Resigned_date,
                                     Days_after_action = a.Days_after_action,
                                     Event_type = a.Event_type,
@@ -555,15 +555,15 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         #endregion
          
-        #region || SendMail ||
+        #region || SendMail Schedule ||
         public async Task<ResponseDto> SendMail()
         {
             try
             {
-                 
-                DateTime startDate = new DateTime(2025, 8, 8);
-                //DateTime startDate = DateTime.Today;
-                DateTime endDate = startDate.AddDays(1);
+
+                //DateTime startDate = new DateTime(2025, 8, 8);
+                DateTime startDate = DateTime.Today.AddDays(-1);
+                DateTime endDate = DateTime.Today;
 
                 List<Application_log> objDucList = await _db.Application_Log
                     .Where(x => x.Action_date_time >= startDate && x.Action_date_time < endDate && x.App_log == "DUC")
@@ -612,8 +612,9 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                 </style>
                                 </head>
                                 <body>");
-                sb.AppendLine(@"<a href=""https://fits/CRUDLogs/applog/report-log"">Go to website</a>");
-                sb.AppendLine("<h4>DUC Report</h4>");
+                sb.AppendLine(@"<a href=""https://fits/CRUDLogs/applog/report-log"">Go to website</a>"); 
+                sb.AppendLine($"<h4>DUC Report log dated {startDate.ToString("dd MMM yyyy")}</h4>");
+
                 if(objDucList.Count > 0)
                 {
                      
@@ -627,7 +628,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                       <th>BU</th>
                       <th>POSITION</th> 
                       <th>Event type</th>
-                      <th>Link Web</th>  
+                      <th>Link</th>  
                     </tr>");
 
                 int ducIndex = 1;
@@ -655,7 +656,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     sb.AppendLine("<h5>&nbsp;&nbsp;The report log is currently empty.</h5>");
                 }
 
-                    sb.AppendLine("<h4>DCC Report</h4>");
+                sb.AppendLine($"<h4>DCC Report log dated {startDate.ToString("dd MMM yyyy")}</h4>");
+
                 if (objDccList.Count > 0)
                 { 
                 sb.AppendLine(@"<table id=""customers"">
@@ -668,7 +670,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                       <th>BU</th>
                       <th>POSITION</th> 
                       <th>Event type</th>
-                      <th>Link Web</th>  
+                      <th>Link</th>  
                     </tr>");
 
                 int dccIndex = 1;
@@ -719,8 +721,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     //client.Credentials = new NetworkCredential(_smtpSettings.Username, _smtpSettings.Password); //ถ้าเป็นระบบภายในไม่ต้องมีการยืนยันตัวตน รหัสผ่าน
                     await client.SendMailAsync(message);
                 }
-
-             
+                string formattedstartDate = startDate.ToString("yyyy-MM-dd");
+                _response.Result = formattedstartDate;
                 _response.Message = _message.SendmailSuccess;
 
             }
@@ -870,7 +872,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         #endregion
 
-        #region || Export Excel send Mail ||
+        #region || Export Excel send Mail Schedule ||
         private MemoryStream ExportExcleDucSendMail(List<Application_logDto> dataList)
         { 
             var filePath = Path.Combine(_env.ContentRootPath, "Files", "reportDUCSendMail.xlsx");
@@ -1104,7 +1106,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                             Detail = x.a.Detail,
                             Bu = x.a.Bu,
                             Position = x.a.Position,
-                            Resigned_date = x.a.Resigned_date,
+                            Resigned_date = x.a.Resigned_date,  
                             Days_after_action = x.a.Days_after_action,
                             Event_type = x.a.Event_type,
                             Unauthorized = x.a.Unauthorized,

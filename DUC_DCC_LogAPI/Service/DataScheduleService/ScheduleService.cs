@@ -31,15 +31,15 @@ namespace DUC_DCC_LogAPI.Service.DccService
             _mapper = mapper;
         }
 
-        #region || DCC Import Data ||
+        #region || DUC Import Data ||
         public async Task<ResponseDto>  ImportDucAsync()
         {
             try
             {
-                DateTime formattedDate = new DateTime(2025, 8, 8);
+                //DateTime formattedDate = new DateTime(2025, 8, 8);
                 //DateTime endDate = startDate.AddDays(1);
 
-                //DateTime formattedDate = DateTime.Today.AddDays(-1);
+                DateTime formattedDate = DateTime.Today.AddDays(-1);
                 string formattedDate1 = formattedDate.ToString("yyyy-MM-dd");
                 var response = await _httpClient.GetAsync($"{_dccApiUrl}&action_datetime={formattedDate1}");
                 response.EnsureSuccessStatusCode();
@@ -104,16 +104,18 @@ namespace DUC_DCC_LogAPI.Service.DccService
         }
         #endregion
 
+        #region || DCC Import Data ||
+
         public async Task<ResponseDto> ImportDccAsync() 
         {
             try
             {
 
-                //DateTime startDate = DateTime.Today.AddDays(-1);
-                //DateTime endDate = DateTime.Today;
+                DateTime startDate = DateTime.Today.AddDays(-1);
+                DateTime endDate = DateTime.Today;
 
-                DateTime startDate = new DateTime(2025, 6, 29);
-                DateTime endDate = startDate.AddDays(1);
+                //DateTime startDate = new DateTime(2025, 6, 29);
+                //DateTime endDate = startDate.AddDays(1);
 
                 List<dcc_crud_log> objList = await _dbContext.dcc_crud_log
                     .Where(x => x.Action_datetime >= startDate && x.Action_datetime < endDate)
@@ -154,10 +156,13 @@ namespace DUC_DCC_LogAPI.Service.DccService
                             await _dbContext.AddRangeAsync(entities);
                     }
                     await _dbContext.SaveChangesAsync();
-                    _response.Result = $"{startDate} TO {endDate}"; 
-                    _response.Message = _message.InsertMessage;
+
+                    
                 }
-              
+
+                string formattedstartDate = startDate.ToString("yyyy-MM-dd"); 
+                _response.Result = formattedstartDate; 
+                _response.Message = _message.InsertMessage;
             }
             catch (Exception ex) {
 
@@ -166,7 +171,7 @@ namespace DUC_DCC_LogAPI.Service.DccService
             }
             return _response;
         }
-
+        #endregion
 
     }
 }

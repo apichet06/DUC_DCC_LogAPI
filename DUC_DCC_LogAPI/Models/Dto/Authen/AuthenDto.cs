@@ -2,7 +2,7 @@
 {
     public class AuthenDto
     {
-        public string? Username { get; set; }
+        public string? user_name { get; set; }
         
     }
 }

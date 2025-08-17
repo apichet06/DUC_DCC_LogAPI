@@ -10,7 +10,7 @@ namespace DUC_DCC_LogAPI.Models
       public string? Action { get; set; }
       public DateTime Action_date_time { get; set; }
       public string? Detail { get; set; }
-      public string? Bu { get; set; }
+      public string? Bu { get; set; } 
       public string? Position { get; set; }
       public DateTime? Resigned_date { get; set; }
       public int? Days_after_action { get; set; }

@@ -42,7 +42,7 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
         {
             try
             {
-                var user = await _db.Users_Permission.FirstOrDefaultAsync(x => x.username == authen.Username);
+                var user = await _db.Users_Permission.FirstOrDefaultAsync(x => x.emp_email == authen.user_name);
 
                 if (user is null)
                     return new ResponseAuthen { IsSuccess = false, Message = _message.LoginNotFound };
@@ -83,11 +83,13 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
             return _resAuthen;
         }
 
+
+        #region || Cookied ||
         public async Task<ResponseAuthen> AuthenticateUserAsync(AuthenDto authen)
         {
             return await Task.Run(() =>
             {
-                var user = new { username = authen.Username };
+                var user = new { username = authen.user_name };
                 var claims = new[]
                 {
             new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]!),
@@ -113,7 +115,7 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
                 return _resAuthen;
             });
         }
-
+        #endregion
 
     }
 }
