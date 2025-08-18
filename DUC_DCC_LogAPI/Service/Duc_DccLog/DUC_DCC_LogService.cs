@@ -45,6 +45,70 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
              
         }
 
+        public async Task<ResponseDto> GetCountReportLog()
+        {
+            try
+            {
+                var today = DateTime.Now.Date;
+                var yesterday = today.AddDays(-1);
+                var targetAppLogs = new[] { "DUC", "DCC" };
+
+                var query = from log in _db.Application_Log
+                            where  log.Admin_confirm == null &&
+                                  targetAppLogs.Contains(log.App_log)
+                            group log by log.App_log into g
+                            select new
+                            {
+                                AppLog = g.Key,
+                                TotalCount = g.Count(),
+                                Count_Yesterday = g.Count(l => l.Action_date_time.Date == yesterday),
+                                Count_AllBeforeYesterday = g.Count(l => l.Action_date_time.Date < yesterday)
+                            };
+
+                var result = await query.ToListAsync();
+                _response.Result = result;
+            }
+            catch (Exception ex) 
+            {
+
+                _response.IsSuccess = false;
+                _response.Message = _message.an_error_occurred + ex.Message;
+            }
+            return _response;
+        }
+
+        public async Task<ResponseDto> GetCountAuditLog()
+        {
+            try
+            {
+                var today = DateTime.Now.Date;
+                var yesterday = today.AddDays(-1);
+                var targetAppLogs = new[] { "DUC", "DCC" };
+
+                var query = from log in _db.Application_Log
+                            where !string.IsNullOrEmpty(log.Admin_confirm) &&
+                                  targetAppLogs.Contains(log.App_log)
+                            group log by log.App_log into g
+                            select new
+                            {
+                                AppLog = g.Key,
+                                TotalCount = g.Count(),
+                                Count_Yesterday = g.Count(l => l.Action_date_time.Date == yesterday),
+                                Count_AllBeforeYesterday = g.Count(l => l.Action_date_time.Date < yesterday)
+                            };
+
+                var result = await query.ToListAsync();
+                _response.Result = result;
+            }
+            catch (Exception ex) 
+            {
+
+                _response.IsSuccess = false;
+                _response.Message = _message.an_error_occurred + ex.Message;
+            }
+            return _response;
+        }
+
         public async Task<ResponseDto> GetDataDUC(Application_log request)
         {
             try
@@ -1145,7 +1209,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         {
             try
             {
-                IEnumerable<SaveDUC_DCC_logDto> obj = await BuildSaveLogQuery(request).OrderByDescending(a => a.Action_date_time).ToListAsync();
+                IEnumerable<SaveDUC_DCC_logDto> obj = await BuildSaveLogQuery(request).OrderBy(a => a.Event_type).ToListAsync();
                 IEnumerable<SaveDUC_DCC_logDto> mappDataList = _mapper.Map<IEnumerable<SaveDUC_DCC_logDto>>(obj);
 
                 _response.Result = mappDataList;

@@ -137,8 +137,17 @@ namespace DUC_DCC_LogAPI.Controllers
             }
         }
 
-        
+        [HttpGet("CountReportLog")]
+        public async Task<IActionResult> GetCountReportLog()
+        {
+            return Ok(await _DCC_Log.GetCountReportLog());
+        }
 
+        [HttpGet("CountAuditLog")]
+        public async Task<IActionResult> GetCountAuditLog()
+        {
+            return Ok(await _DCC_Log.GetCountAuditLog());
+        }
     }
 
 }

@@ -20,5 +20,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         Task<byte[]> ExportExcelAccept(SearchDto request);
         Task<ResponseDto> GetDataDUC(Application_log request);
         Task<ResponseDto> GetDataDCC();
+        Task<ResponseDto> GetCountAuditLog();
+        Task<ResponseDto> GetCountReportLog();
     }
 }

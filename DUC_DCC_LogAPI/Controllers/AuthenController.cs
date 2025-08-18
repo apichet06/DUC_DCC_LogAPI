@@ -61,8 +61,6 @@ namespace DUC_DCC_LogAPI.Controllers
             //});
             #endregion
         }
-
-
-
+         
     }
 }
