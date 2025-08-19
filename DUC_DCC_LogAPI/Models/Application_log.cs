@@ -5,7 +5,7 @@ namespace DUC_DCC_LogAPI.Models
     public class Application_log
     { 
       public int Id { get; set; }
-      public string? Bu_code { get; set; }
+      public int Plant_Id { get; set; }
       public string? Group_name  { get; set; }
       public string? Username { get; set; }
       public string? Action { get; set; }

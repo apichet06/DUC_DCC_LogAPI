@@ -1,5 +1,6 @@
 ﻿using DUC_DCC_LogAPI.Models.Dto.Duc_DccLog;
 using DUC_DCC_LogAPI.Service.Chart;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,6 +8,7 @@ namespace DUC_DCC_LogAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ChartController(IChart chart) : ControllerBase
 
     {

@@ -73,7 +73,7 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
                         new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString()), 
                         new Claim("UserId", user.username!)
                     };
-                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:key"]!));
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
                 var singIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
                 var token = new JwtSecurityToken(
                     _configuration["Jwt:Issuer"],
@@ -114,11 +114,11 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
             new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
             new Claim("UserId", user.username!)
         };
-                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["jwt:key"]!));
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
                 var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
                 var token = new JwtSecurityToken(
-                    _configuration["jwt:Issuer"],
-                    _configuration["jwt:Audience"],
+                    _configuration["Jwt:Issuer"],
+                    _configuration["Jwt:Audience"],
                     claims,
                     expires: DateTime.UtcNow.AddMinutes(60),
                     signingCredentials: signIn

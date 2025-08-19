@@ -1,6 +1,7 @@
 ﻿using DUC_DCC_LogAPI.Models;
 using DUC_DCC_LogAPI.Models.Dto.Authen;
 using DUC_DCC_LogAPI.Service.AuthenService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RTools_NTS.Util;
@@ -8,8 +9,7 @@ using RTools_NTS.Util;
 namespace DUC_DCC_LogAPI.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]
-
+    [ApiController] 
     public class AuthenController(IAuthenService authen) : ControllerBase
     {
         private readonly IAuthenService _authen = authen;
@@ -55,6 +55,7 @@ namespace DUC_DCC_LogAPI.Controllers
             return Ok(await _authen.GetUserById(id));
         }
 
+     
         [HttpGet("users/")]
         public async Task<IActionResult> GetUserList([FromQuery] Users_Permission request)
         {

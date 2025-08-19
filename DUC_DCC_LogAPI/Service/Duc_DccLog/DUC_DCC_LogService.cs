@@ -1221,12 +1221,166 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             return _response;
         }
 
-  
+
         #endregion
 
 
+        #region || SendEmailAsync 2025-08-19 ||
+        public async Task<ResponseDto> SendMailByPlant()
+        {
+            try
+            {
+                DateTime startDate = DateTime.Today.AddDays(-1);
+                DateTime endDate = DateTime.Today;
 
+                // ดึง user + plant name ที่ active และ accept
+                var plantUsers = await (
+                    from u in _db.Users_Permission
+                    join p in _db.bu_plant on u.Plant_Id equals p.Id
+                    //where u.is_active && u.is_accept
+                    select new
+                    {
+                        u.emp_no,
+                        u.emp_email,
+                        u.username,
+                        u.firstname,
+                        u.lastname,
+                        u.Plant_Id,
+                        p.Plant_Name
+                    }
+                ).ToListAsync();
 
+                // ดึง plant ทั้งหมดจาก user
+                var plants = plantUsers
+                    .Select(u => new { u.Plant_Id, u.Plant_Name })
+                    .Distinct();
 
+                // ===== ดึง log ทั้งหมดของวันนี้ =====
+                var allDucLogs = await _db.Application_Log
+                    .Where(x => x.Action_date_time >= startDate && x.Action_date_time < endDate
+                             && x.App_log == "DUC" && x.Event_type == "Unusual Event")
+                    .ToListAsync();
+
+                var allDccLogs = await _db.Application_Log
+                    .Where(x => x.Action_date_time >= startDate && x.Action_date_time < endDate
+                             && x.App_log == "DCC" && x.Event_type == "Unusual Event")
+                    .ToListAsync();
+
+                foreach (var plant in plants)
+                {
+                    // ===== DUC =====
+                    var ducLogs = allDucLogs.Where(x => x.Plant_Id == plant.Plant_Id).ToList();
+                    var ducUsers = plantUsers.Where(u => u.Plant_Id == plant.Plant_Id).ToList();
+
+                    if (ducLogs.Count > 0 && ducUsers.Count > 0)
+                    {
+                        var ducDtoList = _mapper.Map<List<Application_logDto>>(ducLogs);
+                        Stream ducStream = ExportExcleDucSendMail(ducDtoList);
+                        string ducBody = BuildEmailBody($"DUC Report - {plant.Plant_Name}", startDate, ducLogs);
+
+                        string ducEmails = string.Join(";", ducUsers.Select(u => u.emp_email));
+                        await SendEmailAsync($"DUC Report - {plant.Plant_Name}", ducBody, ducStream, $"reportDUC_{plant.Plant_Name}.xlsx", ducEmails);
+                    }
+
+                    // ===== DCC =====
+                    var dccLogs = allDccLogs.Where(x => x.Plant_Id == plant.Plant_Id).ToList();
+                    var dccUsers = plantUsers.Where(u => u.Plant_Id == plant.Plant_Id).ToList();
+
+                    if (dccLogs.Count > 0 && dccUsers.Count > 0)
+                    {
+                        var dccDtoList = _mapper.Map<List<Application_logDto>>(dccLogs);
+                        Stream dccStream = ExportExcleDccSendMail(dccDtoList);
+                        string dccBody = BuildEmailBody($"DCC Report - {plant.Plant_Name}", startDate, dccLogs);
+
+                        string dccEmails = string.Join(";", dccUsers.Select(u => u.emp_email));
+                        await SendEmailAsync($"DCC Report - {plant.Plant_Name}", dccBody, dccStream, $"reportDCC_{plant.Plant_Name}.xlsx", dccEmails);
+                    }
+                }
+
+                _response.Result = startDate.ToString("yyyy-MM-dd");
+                _response.Message = _message.SendmailSuccess;
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.Message = _message.an_error_occurred + ex.Message;
+            }
+
+            return _response;
+        }
+
+        // ===== ฟังก์ชันสร้าง body HTML =====
+        private string BuildEmailBody(string type, DateTime startDate, List<Application_log> logs)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("<html><body>");
+            sb.AppendLine($"<h4>{type} dated {startDate:dd MMM yyyy}</h4>");
+            sb.AppendLine(@"<a href=""https://fits/CRUDLogs/applog/report-log"">Go to website</a>");
+
+            if (logs.Count > 0)
+            {
+                sb.AppendLine(@"<table border='1' style='border-collapse:collapse;font-size:11px;'>
+                        <tr>
+                          <th>No</th>
+                          <th>Group Name</th>
+                          <th>Username</th>
+                          <th>Action Date/Time</th>
+                          <th>Detail</th>
+                          <th>BU</th>
+                          <th>Position</th>
+                          <th>Event Type</th>
+                          <th>Link</th>
+                        </tr>");
+
+                int index = 1;
+                foreach (var log in logs)
+                {
+                    string color = log.Event_type == "Usual Event" ? "black" : "red";
+                    sb.AppendLine($@"
+                <tr>
+                  <td>{index++}</td>
+                  <td>{log.Group_name}</td>
+                  <td>{log.Username}</td>
+                  <td>{log.Action_date_time:yyyy-MM-dd HH:mm:ss}</td>
+                  <td>{log.Detail}</td>
+                  <td>{log.Bu}</td>
+                  <td>{log.Position}</td>
+                  <td style='color:{color}'>{log.Event_type}</td>
+                  <td><a href='https://fits/CRUDLogs/applog/report-log/{log.Id}/{log.App_log}'>Click</a></td>
+                </tr>");
+                }
+
+                sb.AppendLine("</table>");
+            }
+            else
+            {
+                sb.AppendLine("<p>No data found.</p>");
+            }
+
+            sb.AppendLine("</body></html>");
+            return sb.ToString();
+        }
+
+        // ===== ฟังก์ชันส่งอีเมล =====
+        private async Task SendEmailAsync(string subject, string body, Stream attachStream, string fileName, string toEmails)
+        {
+            using var message = new MailMessage();
+            message.From = new MailAddress(_smtpSettings.SenderEmail!, _smtpSettings.SenderName);
+
+            foreach (var email in toEmails.Split(';'))
+                message.To.Add(email);
+
+            message.Subject = subject;
+            message.Body = body;
+            message.IsBodyHtml = true;
+            message.Attachments.Add(new Attachment(attachStream, fileName, ContentTypeConfig.Xlsx));
+
+            using var client = new SmtpClient(_smtpSettings.SmtpServer);
+            client.EnableSsl = false;
+            client.UseDefaultCredentials = false;
+            await client.SendMailAsync(message);
+        }
+
+        #endregion
     }
 }
