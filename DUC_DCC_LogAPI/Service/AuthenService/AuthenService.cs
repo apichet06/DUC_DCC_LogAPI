@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using Azure;
-using Microsoft.AspNetCore.Http;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using DUC_DCC_LogAPI.Data; 
+using DUC_DCC_LogAPI.Models;
 using DUC_DCC_LogAPI.Models.Dto;
 using DUC_DCC_LogAPI.Models.Dto.Authen;
 using DUC_DCC_LogAPI.Models.Dto.User;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
  
@@ -35,20 +37,35 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
             _resAuthen = new ResponseAuthen();
         }
 
-
-
-
+         
         public async Task<ResponseAuthen> Authen(AuthenDto authen)
         {
             try
             {
-                var user = await _db.Users_Permission.FirstOrDefaultAsync(x => x.emp_email == authen.user_name);
+                //var user = await _db.Users_Permission.FirstOrDefaultAsync(x => x.emp_email == authen.user_name);
+                var user = await (from a in _db.Users_Permission
+                                  join b in _db.bu_plant on a.Plant_Id equals b.Id
+                                  select new UserResposeDto
+                                  {
+                                      Id = a.Id,
+                                      Plant = b.Plant,
+                                      emp_no = a.emp_no,
+                                      emp_email = a.emp_email,
+                                      username = a.username,
+                                      firstname = a.firstname,
+                                      lastname = a.lastname,
+                                      is_active = a.is_active,
+                                      is_accept = a.is_accept,
+                                      is_review = a.is_review,
+                                      App_Id = a.App_Id,
+                                      Status = a.Status,
+                                      Plant_Name = b.Plant_Name
+                                  }).FirstOrDefaultAsync(x => x.emp_email == authen.user_name);
 
                 if (user is null)
                     return new ResponseAuthen { IsSuccess = false, Message = _message.LoginNotFound };
 
-
-
+                 
                 var claims = new[]
                  {
                         new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]!),
@@ -56,11 +73,11 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
                         new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString()), 
                         new Claim("UserId", user.username!)
                     };
-                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["jwt:key"]!));
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:key"]!));
                 var singIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
                 var token = new JwtSecurityToken(
-                    _configuration["jwt:Issuer"],
-                    _configuration["jwt:Audience"],
+                    _configuration["Jwt:Issuer"],
+                    _configuration["Jwt:Audience"],
                 claims, expires: DateTime.Now.AddHours(24),
                 signingCredentials: singIn);
 
@@ -115,7 +132,78 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
                 return _resAuthen;
             });
         }
+
+
         #endregion
+
+        public async Task<ResponseDto> GetUserById(string id)
+        {
+            try
+            {
+                var query = await (from a in _db.Users_Permission 
+                                   join b in _db.bu_plant on a.Plant_Id equals b.Id 
+                                   where a.emp_no == id
+                                   select new UserResposeDto
+                                   {
+                                      Id = a.Id,
+                                      Plant = b.Plant,
+                                      emp_no = a.emp_no,
+                                      emp_email = a.emp_email,
+                                      username = a.username,
+                                      firstname = a.firstname,
+                                      lastname = a.lastname,
+                                      is_active = a.is_active,
+                                      is_accept = a.is_accept,
+                                      is_review = a.is_review,
+                                      App_Id = a.App_Id,
+                                      Status = a.Status,
+                                      Plant_Name = b.Plant_Name
+                                   }).ToListAsync(); 
+                _response.Result = query;
+            }
+
+            catch (Exception ex) {
+                _response.IsSuccess = false;
+                _response.Message = _message.an_error_occurred + ex.Message;
+                
+            }
+            return _response;
+        }
+
+        public async Task<ResponseDto> GetUserList(Users_Permission request)
+        {
+            try
+            {
+                var query = await (from a in _db.Users_Permission
+                                   join b in _db.bu_plant on a.Plant_Id equals b.Id 
+                                   select new UserResposeDto
+                                   {
+                                       Id = a.Id,
+                                       Plant = b.Plant,
+                                       emp_no = a.emp_no,
+                                       emp_email = a.emp_email,
+                                       username = a.username,
+                                       firstname = a.firstname,
+                                       lastname = a.lastname,
+                                       is_active = a.is_active,
+                                       is_accept = a.is_accept,
+                                       is_review = a.is_review,
+                                       App_Id = a.App_Id,
+                                       Status = a.Status,
+                                       Plant_Name = b.Plant_Name
+                                   }).ToListAsync();
+
+                _response.Result = _mapper.Map<List<UserResposeDto>>( query);
+            }
+
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.Message = _message.an_error_occurred + ex.Message;
+
+            }
+            return _response;
+        }
 
     }
 }

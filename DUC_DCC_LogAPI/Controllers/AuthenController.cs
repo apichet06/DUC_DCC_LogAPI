@@ -1,4 +1,5 @@
-﻿using DUC_DCC_LogAPI.Models.Dto.Authen;
+﻿using DUC_DCC_LogAPI.Models;
+using DUC_DCC_LogAPI.Models.Dto.Authen;
 using DUC_DCC_LogAPI.Service.AuthenService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -31,10 +32,7 @@ namespace DUC_DCC_LogAPI.Controllers
                 SameSite = SameSiteMode.Lax,
                 Expires = DateTime.Now.AddDays(3)
             });
-
-
-            //HttpContext.Response.Cookies.Append("username", userName);
-            //HttpContext.Response.Cookies.Append("authToken", authResult.token!);
+             
             return Redirect("http://localhost:5173/CRUDLogs/applog/");
             //return Redirect("https://fits/CRUDLogs/applog");
 
@@ -48,19 +46,20 @@ namespace DUC_DCC_LogAPI.Controllers
             //    Expires = DateTime.UtcNow.AddMinutes(60)
             //}); 
             #endregion
-
-
-            #region || backup ||
-            //return Ok(new
-            //{
-            //    IsSuccess = true,
-            //    Token = authResult.token,
-            //    //url = "http://dccduclog/reportlog",
-            //    url = "http://localhost:5173/reportlog",
-            //    Message = authResult.Message
-            //});
-            #endregion
+             
         }
-         
+
+        [HttpGet("byId/{id}")]
+        public async Task<IActionResult> GetUserById(string id)
+        {
+            return Ok(await _authen.GetUserById(id));
+        }
+
+        [HttpGet("users/")]
+        public async Task<IActionResult> GetUserList([FromQuery] Users_Permission request)
+        {
+            return Ok(await _authen.GetUserList(request));
+        }
+        
     }
 }

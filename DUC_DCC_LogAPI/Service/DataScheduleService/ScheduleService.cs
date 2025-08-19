@@ -62,7 +62,7 @@ namespace DUC_DCC_LogAPI.Service.DccService
                         
                         var entities = batch.Select(t => new Application_log
                         {
-                            
+                            Bu_code= t.Bu_code,
                             Group_name = t.Group_name,
                             Username = t.Username,
                             Action = t.Action,
@@ -130,7 +130,7 @@ namespace DUC_DCC_LogAPI.Service.DccService
                         {
                         var entities = batch.Select(t => new Application_log
                             {
-
+                            Bu_code = t.Bu_code,
                             Group_name = t.Group_name,
                             Username = t.Username,
                             Action = t.Action,

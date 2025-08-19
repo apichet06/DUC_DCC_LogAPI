@@ -1,4 +1,5 @@
-﻿using DUC_DCC_LogAPI.Models.Dto;
+﻿using DUC_DCC_LogAPI.Models;
+using DUC_DCC_LogAPI.Models.Dto;
 using DUC_DCC_LogAPI.Models.Dto.Authen;
 
 namespace DUC_DCC_LogAPI.Service.AuthenService
@@ -7,5 +8,7 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
     {
         Task<ResponseAuthen> Authen(AuthenDto authen);
         Task<ResponseAuthen> AuthenticateUserAsync(AuthenDto authen);
+        Task<ResponseDto> GetUserById(string id);
+        Task<ResponseDto> GetUserList(Users_Permission request);
     }
 }

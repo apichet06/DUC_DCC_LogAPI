@@ -630,14 +630,14 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 DateTime endDate = DateTime.Today;
 
                 List<Application_log> objDucList = await _db.Application_Log
-                    .Where(x => x.Action_date_time >= startDate && x.Action_date_time < endDate && x.App_log == "DUC")
+                    .Where(x => x.Action_date_time >= startDate && x.Action_date_time < endDate && x.App_log == "DUC" && x.Event_type == "Unusual Event")
                     .ToListAsync();
                 var mappDucList = _mapper.Map<List<Application_logDto>>(objDucList);
 
            var ducStreem =  ExportExcleDucSendMail(mappDucList);
 
                 List<Application_log> objDccList = await _db.Application_Log
-                 .Where(x => x.Action_date_time >= startDate && x.Action_date_time < endDate && x.App_log == "DCC")
+                 .Where(x => x.Action_date_time >= startDate && x.Action_date_time < endDate && x.App_log == "DCC" && x.Event_type == "Unusual Event")
                  .ToListAsync();
                 var mappDccList = _mapper.Map<List<Application_logDto>>(objDccList);
 
@@ -764,9 +764,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     sb.AppendLine("</body></html>");
                 #endregion
                 string body = sb.ToString();
-
-                //string filePathDuc = Path.Combine(_env.ContentRootPath, "Files", "reportDUCSendMail.xlsx");
-                //string filePathDcc = Path.Combine(_env.ContentRootPath, "Files", "reportDCCSendMail.xlsx");
+                 
                 var message = new MailMessage();
                 message.From = new MailAddress(_smtpSettings.SenderEmail!, _smtpSettings.SenderName);
                 message.To.Add("apichets@fabrinet.co.th");

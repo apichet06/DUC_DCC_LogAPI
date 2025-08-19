@@ -3,6 +3,7 @@
     public class Application_logDto
     {
         public int Id { get; set; }
+        public string? Bu_code { get; set; }
         public string? Group_name { get; set; }
         public string? Username { get; set; }
         public string? Action { get; set; }

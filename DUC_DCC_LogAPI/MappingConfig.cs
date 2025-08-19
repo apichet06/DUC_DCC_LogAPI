@@ -15,6 +15,7 @@ namespace DUC_DCC_LogAPI
                     config.CreateMap<Application_log, Application_logDto>();
                     config.CreateMap<Application_log, SaveDUC_DCC_logDto>();
                     config.CreateMap<Users_Permission,UserResposeDto>();
+
                 });
             return mappingConfig;
         }

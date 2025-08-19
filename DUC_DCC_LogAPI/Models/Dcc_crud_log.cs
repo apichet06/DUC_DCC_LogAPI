@@ -4,6 +4,7 @@
     {
      
         public string? Group_name { get; set; }
+        public string? Bu_code { get; set; }
         public string? Username { get; set; }
         public string? Action { get; set; }
         public DateTime  Action_datetime { get; set; }
