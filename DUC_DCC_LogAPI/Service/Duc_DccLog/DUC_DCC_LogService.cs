@@ -17,6 +17,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Text;
 using static DUC_DCC_LogAPI.Constant.Constants;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 {
@@ -991,8 +992,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         }
 
         private MemoryStream ExportExcleDccSendMail(List<Application_logDto> dataList)
-        {
-       
+        { 
             var filePath = Path.Combine(_env.ContentRootPath, "Files", "reportDCCSendMail.xlsx");
 
             using var workbook = new XLWorkbook(filePath);
@@ -1152,7 +1152,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                        (a.Unauthorized ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
                                        (a.Download_more_10_files_day ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
                                        (a.Employee_resigning_within_one_month ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
-                                       ((ab.firstname + " " + ab.lastname) ?? "").ToLower().Contains(request.Search.ToLower().Trim()) // ✅ ค้นหา Admin_confirm
+                                       ((ab.firstname + " " + ab.lastname) ?? "").ToLower().Contains(request.Search.ToLower().Trim())  
                                  )
                                  select new { a, ab, ac };
 
@@ -1225,19 +1225,20 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         #endregion
 
 
+
         #region || SendEmailAsync 2025-08-19 ||
         public async Task<ResponseDto> SendMailByPlant()
         {
             try
             {
-                DateTime startDate = DateTime.Today.AddDays(-1);
+                DateTime startDate = DateTime.Today.AddDays(-2);
                 DateTime endDate = DateTime.Today;
 
                 // ดึง user + plant name ที่ active และ accept
                 var plantUsers = await (
                     from u in _db.Users_Permission
                     join p in _db.bu_plant on u.Plant_Id equals p.Id
-                    //where u.is_active && u.is_accept
+                    where u.is_active == 1
                     select new
                     {
                         u.emp_no,
@@ -1246,13 +1247,14 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                         u.firstname,
                         u.lastname,
                         u.Plant_Id,
-                        p.Plant_Name
+                        p.Plant_Name,
+                        p.Plant
                     }
                 ).ToListAsync();
 
                 // ดึง plant ทั้งหมดจาก user
                 var plants = plantUsers
-                    .Select(u => new { u.Plant_Id, u.Plant_Name })
+                    .Select(u => new { u.Plant_Id,u.Plant, u.Plant_Name })
                     .Distinct();
 
                 // ===== ดึง log ทั้งหมดของวันนี้ =====
@@ -1269,21 +1271,22 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 foreach (var plant in plants)
                 {
                     // ===== DUC =====
-                    var ducLogs = allDucLogs.Where(x => x.Plant_Id == plant.Plant_Id).ToList();
+                    var ducLogs = allDucLogs.Where(x => x.Bu_code!.Split('.').Last() == plant.Plant).ToList();
                     var ducUsers = plantUsers.Where(u => u.Plant_Id == plant.Plant_Id).ToList();
 
                     if (ducLogs.Count > 0 && ducUsers.Count > 0)
                     {
                         var ducDtoList = _mapper.Map<List<Application_logDto>>(ducLogs);
                         Stream ducStream = ExportExcleDucSendMail(ducDtoList);
+                    
                         string ducBody = BuildEmailBody($"DUC Report - {plant.Plant_Name}", startDate, ducLogs);
-
+                       
                         string ducEmails = string.Join(";", ducUsers.Select(u => u.emp_email));
-                        await SendEmailAsync($"DUC Report - {plant.Plant_Name}", ducBody, ducStream, $"reportDUC_{plant.Plant_Name}.xlsx", ducEmails);
+                        await SendEmailAsync($"DUC Report - {plant.Plant_Name}", ducBody, ducStream, $"reportDUC_{plant.Plant_Name} {startDate.ToString("yyyy-MM-dd")}.xlsx", ducEmails);
                     }
 
                     // ===== DCC =====
-                    var dccLogs = allDccLogs.Where(x => x.Plant_Id == plant.Plant_Id).ToList();
+                    var dccLogs = allDccLogs.Where(x => x.Bu_code!.Split('.').Last() == plant.Plant).ToList();
                     var dccUsers = plantUsers.Where(u => u.Plant_Id == plant.Plant_Id).ToList();
 
                     if (dccLogs.Count > 0 && dccUsers.Count > 0)
@@ -1293,7 +1296,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                         string dccBody = BuildEmailBody($"DCC Report - {plant.Plant_Name}", startDate, dccLogs);
 
                         string dccEmails = string.Join(";", dccUsers.Select(u => u.emp_email));
-                        await SendEmailAsync($"DCC Report - {plant.Plant_Name}", dccBody, dccStream, $"reportDCC_{plant.Plant_Name}.xlsx", dccEmails);
+                        await SendEmailAsync($"DCC Report - {plant.Plant_Name}", dccBody, dccStream, $"reportDCC_{plant.Plant_Name} {startDate.ToString("yyyy-MM-dd")}.xlsx", dccEmails);
                     }
                 }
 
@@ -1312,14 +1315,47 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         // ===== ฟังก์ชันสร้าง body HTML =====
         private string BuildEmailBody(string type, DateTime startDate, List<Application_log> logs)
         {
+
+            //var firstLog = logs.FirstOrDefault();
             var sb = new StringBuilder();
             sb.AppendLine("<html><body>");
             sb.AppendLine($"<h4>{type} dated {startDate:dd MMM yyyy}</h4>");
             sb.AppendLine(@"<a href=""https://fits/CRUDLogs/applog/report-log"">Go to website</a>");
-
+             sb.AppendLine(@$"<a href=""https://fits/CRUDLogs/applog/report-log/admin_confirm=000000"">Save all</a>");
             if (logs.Count > 0)
             {
-                sb.AppendLine(@"<table border='1' style='border-collapse:collapse;font-size:11px;'>
+                sb.AppendLine(@"<!DOCTYPE html>
+                                <html>
+                                <head>
+                                <style>
+                                #customers {
+                                  font-family: Arial, Helvetica, sans-serif;
+                                  border-collapse: collapse;
+                                  width: 100%; 
+                                }
+
+                                #customers td, #customers th {
+                                  border: 1px solid #ddd;
+                                  padding: 5px;
+                                  font-size: 11px;
+                                }
+
+                                #customers tr:nth-child(even) {background-color: #f2f2f2;}
+
+                                #customers tr:hover {background-color: #ddd;}
+
+                                #customers th {
+                                  padding-top: 7px;
+                                  padding-bottom: 7px;
+                                  text-align: left;
+                                  background-color: #04AA6D;
+                                  color: white;
+                                }
+                                </style>
+                                </head>
+                                <body>");
+
+                sb.AppendLine(@"<table id=""customers"">
                         <tr>
                           <th>No</th>
                           <th>Group Name</th>
@@ -1329,7 +1365,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                           <th>BU</th>
                           <th>Position</th>
                           <th>Event Type</th>
-                          <th>Link</th>
+                          <th>...</th>
                         </tr>");
 
                 int index = 1;
@@ -1346,7 +1382,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                   <td>{log.Bu}</td>
                   <td>{log.Position}</td>
                   <td style='color:{color}'>{log.Event_type}</td>
-                  <td><a href='https://fits/CRUDLogs/applog/report-log/{log.Id}/{log.App_log}'>Click</a></td>
+                  <td><a href='https://fits/CRUDLogs/applog/report-log/{log.Id}/{log.App_log}'>view/update</a></td>
                 </tr>");
                 }
 
@@ -1368,7 +1404,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             message.From = new MailAddress(_smtpSettings.SenderEmail!, _smtpSettings.SenderName);
 
             foreach (var email in toEmails.Split(';'))
-                message.To.Add(email);
+            message.To.Add(email);
 
             message.Subject = subject;
             message.Body = body;
@@ -1382,5 +1418,43 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         }
 
         #endregion
+
+
+        public async Task<ResponseDto> SaveAllDayInEmail(string admin_confirm, DateTime date, string plant, string app_log)
+        {
+            try
+            {
+                DateTime startDate = date.Date;
+                DateTime endDate = DateTime.Today.AddDays(1);
+                string plantSuffix = "." + plant;
+                IQueryable<Application_log> query = _db.Application_Log.Where(x => x.App_log == app_log
+                && x.Action_date_time >= startDate && x.Action_date_time < endDate
+                && x.Bu_code!.EndsWith(plantSuffix));
+
+                var obj = await query.ToListAsync();
+                //var mappList = _mapper.Map<List<Application_logDto>>(obj);
+                //_response.Result = mappList;
+
+                foreach (var item in obj)
+                {
+                    item.Admin_confirm = admin_confirm;
+                    item.Admin_confirm_comment = "save on email";
+                    item.Admin_confirm_date = DateTime.Now;
+                    item.Admin_confirm_event = "Usual Event";
+                }
+
+               
+
+
+                await _db.SaveChangesAsync();
+                 
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.Message = _message.an_error_occurred + ex.Message;
+            }
+            return _response;
+        }
     }
 }

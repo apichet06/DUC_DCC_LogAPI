@@ -71,6 +71,18 @@ namespace DUC_DCC_LogAPI.Controllers
             return Ok(results);
         }
 
+        [HttpGet("SendMailByPlant")]
+        public async Task<IActionResult> SendMailByPlant()
+        {
+            return Ok( await _DCC_Log.SendMailByPlant());
+        }
+
+        [HttpGet("SaveAllDayInEmail/{admin_confirm}/{date}/{plant}/{app_log}")]
+        public async Task<IActionResult> SaveAllDayInEmail(string admin_confirm, DateTime date, string plant, string app_log)
+        {
+            return Ok(await _DCC_Log.SaveAllDayInEmail(admin_confirm,date,plant,app_log));
+        }
+
         //[HttpGet("ExportExcelDUCBas64")]
         //public async Task<IActionResult> GetExportExcel([FromQuery] SearchDto request)
         //{

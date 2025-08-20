@@ -1,7 +1,8 @@
-﻿using DUC_DCC_LogAPI.Models.Dto;
-using DUC_DCC_LogAPI.Models.Dtos;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
 using DUC_DCC_LogAPI.Models;
+using DUC_DCC_LogAPI.Models.Dto;
 using DUC_DCC_LogAPI.Models.Dto.Duc_DccLog;
+using DUC_DCC_LogAPI.Models.Dtos;
 
 namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 {
@@ -22,5 +23,10 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         Task<ResponseDto> GetDataDCC();
         Task<ResponseDto> GetCountAuditLog();
         Task<ResponseDto> GetCountReportLog();
+        Task<ResponseDto> SendMailByPlant();
+        Task<ResponseDto> SaveAllDayInEmail(string admin_confirm, DateTime date,string plant,string app_log);
     }
 }
+
+
+

@@ -21,6 +21,13 @@
         public string? Admin_confirm_comment { get; set; }
         public string? Admin_confirm_event { get; set; }
     }
+
+    public class DataAcceptDataAllEamil
+    {
+        public string? admin_confirm { get; set; }
+        public DateTime Datetime { get; set; }
+
+    }
 }
 
  
