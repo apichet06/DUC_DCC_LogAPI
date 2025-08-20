@@ -30,9 +30,9 @@ namespace DUC_DCC_LogAPI.Service.DccService
             _message = new MessageDto();
             _mapper = mapper;
         }
-
+      
         #region || DUC Import Data ||
-        public async Task<ResponseDto>  ImportDucAsync()
+        public async Task<ResponseDto> ImportDucAsync()
         {
             try
             {
@@ -41,28 +41,25 @@ namespace DUC_DCC_LogAPI.Service.DccService
 
                 DateTime formattedDate = DateTime.Today.AddDays(-1);
                 string formattedDate1 = formattedDate.ToString("yyyy-MM-dd");
+
                 var response = await _httpClient.GetAsync($"{_dccApiUrl}&action_datetime={formattedDate1}");
                 response.EnsureSuccessStatusCode();
 
-                var serializerOptions = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                };
-
+                var serializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                 serializerOptions.Converters.Add(new CustomDateTimeConverter());
 
                 var json = await response.Content.ReadAsStringAsync();
                 var todos = JsonSerializer.Deserialize<List<Duc_crud>>(json, serializerOptions);
-                if (todos != null && todos.Any())
+
+                if (todos?.Any() == true)
                 {
                     const int batchSize = 1000;
 
                     foreach (var batch in todos.Chunk(batchSize))
                     {
-                        
                         var entities = batch.Select(t => new Application_log
                         {
-                            Bu_code= t.Bu_code,
+                            Bu_code = t.Bu_code,
                             Group_name = t.Group_name,
                             Username = t.Username,
                             Action = t.Action,
@@ -79,29 +76,48 @@ namespace DUC_DCC_LogAPI.Service.DccService
                             Unauthorized = t.Unauthorized,
                             Upload_datetime = DateTime.Now
                         }).ToList();
-                         
-                    var  dataapp = await _dbContext.Application_Log.FirstOrDefaultAsync(
-                        a=>a.Group_name == entities[0].Group_name && a.Username == entities[0].Username && a.Action == entities[0].Action && 
-                        a.Action_date_time == entities[0].Action_date_time && a.Detail == entities[0].Detail);
-                        if(dataapp == null)
-                        await _dbContext.AddRangeAsync(entities); // ถ้าต้องการใส่ options หรือ token สามารถเพิ่มได้
-                        //Console.WriteLine($"Inserted batch of {entities.Count} items.");
+
+                        var keys = entities.Select(e => (e.Group_name, e.Username, e.Action, e.Action_date_time, e.Detail)).ToList();
+
+                        var existing = await _dbContext.Application_Log
+                             .Where(a => keys.Any(k =>
+                                 k.Group_name == a.Group_name &&
+                                 k.Username == a.Username &&
+                                 k.Action == a.Action &&
+                                 k.Action_date_time == a.Action_date_time &&
+                                 k.Detail == a.Detail))
+                             .Select(a => new
+                             {
+                                 a.Group_name,
+                                 a.Username,
+                                 a.Action,
+                                 a.Action_date_time,
+                                 a.Detail
+                             }).ToListAsync();
+
+                        var existingSet = existing.ToHashSet();
+                        var newEntities = entities
+                            .Where(e => !existingSet.Contains(new { e.Group_name, e.Username, e.Action, e.Action_date_time, e.Detail }))
+                            .ToList();
+                        if (newEntities.Any())
+                            await _dbContext.AddRangeAsync(newEntities);
                     }
 
-                    // ไม่มี need แล้วที่จะ SaveChangesAsync หลัง BulkInsert
-                      await _dbContext.SaveChangesAsync();
+                    await _dbContext.SaveChangesAsync();
+
                     _response.Result = formattedDate1;
                     _response.Message = _message.InsertMessage;
-
                 }
             }
             catch (Exception ex)
             {
-              _response.IsSuccess = false;
-              _response.Message = ex.Message;
+                _response.IsSuccess = false;
+                _response.Message = ex.Message;
             }
+
             return _response;
         }
+
         #endregion
 
         #region || DCC Import Data ||
@@ -110,12 +126,11 @@ namespace DUC_DCC_LogAPI.Service.DccService
         {
             try
             {
-
-                DateTime startDate = DateTime.Today.AddDays(-1);
-                DateTime endDate = DateTime.Today;
-
                 //DateTime startDate = new DateTime(2025, 6, 29);
                 //DateTime endDate = startDate.AddDays(1);
+
+                DateTime startDate = DateTime.Today.AddDays(-1);
+                DateTime endDate = DateTime.Today; 
 
                 List<dcc_crud_log> objList = await _dbContext.dcc_crud_log
                     .Where(x => x.Action_datetime >= startDate && x.Action_datetime < endDate)
@@ -149,15 +164,33 @@ namespace DUC_DCC_LogAPI.Service.DccService
                             Upload_datetime = DateTime.Now 
                         }).ToList();
 
-                        var dataapp = await _dbContext.Application_Log.FirstOrDefaultAsync(
-                            a => a.Group_name == entities[0].Group_name && a.Username == entities[0].Username && a.Action == entities[0].Action && 
-                            a.Action_date_time == entities[0].Action_date_time && a.Detail == entities[0].Detail );
-                        if (dataapp == null)
-                            await _dbContext.AddRangeAsync(entities);
+                        var keys = entities.Select(e => (e.Group_name, e.Username, e.Action, e.Action_date_time, e.Detail)).ToList();
+
+                        var existing = await _dbContext.Application_Log
+                             .Where(a => keys.Any(k =>
+                                 k.Group_name == a.Group_name &&
+                                 k.Username == a.Username &&
+                                 k.Action == a.Action &&
+                                 k.Action_date_time == a.Action_date_time &&
+                                 k.Detail == a.Detail))
+                             .Select(a => new
+                             {
+                                 a.Group_name,
+                                 a.Username,
+                                 a.Action,
+                                 a.Action_date_time,
+                                 a.Detail
+                             }).ToListAsync();
+
+                        var existingSet = existing.ToHashSet();
+                        var newEntities = entities
+                            .Where(e => !existingSet.Contains(new { e.Group_name, e.Username, e.Action, e.Action_date_time, e.Detail }))
+                            .ToList();
+                        if (newEntities.Any())
+                            await _dbContext.AddRangeAsync(newEntities);
                     }
                     await _dbContext.SaveChangesAsync();
-
-                    
+                     
                 }
 
                 string formattedstartDate = startDate.ToString("yyyy-MM-dd"); 

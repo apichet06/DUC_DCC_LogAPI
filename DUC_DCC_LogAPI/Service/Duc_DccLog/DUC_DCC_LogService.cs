@@ -1254,7 +1254,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
                 // ดึง plant ทั้งหมดจาก user
                 var plants = plantUsers
-                    .Select(u => new { u.Plant_Id,u.Plant, u.Plant_Name })
+                    .Select(u => new { u.Plant_Id,u.Plant, u.Plant_Name,u.emp_email })
                     .Distinct();
 
                 // ===== ดึง log ทั้งหมดของวันนี้ =====
@@ -1279,7 +1279,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                         var ducDtoList = _mapper.Map<List<Application_logDto>>(ducLogs);
                         Stream ducStream = ExportExcleDucSendMail(ducDtoList);
                     
-                        string ducBody = BuildEmailBody($"DUC Report - {plant.Plant_Name}", startDate, ducLogs);
+                        string ducBody = BuildEmailBody($"DUC Report - {plant.Plant_Name}", startDate, ducLogs,plant.Plant);
                        
                         string ducEmails = string.Join(";", ducUsers.Select(u => u.emp_email));
                         await SendEmailAsync($"DUC Report - {plant.Plant_Name}", ducBody, ducStream, $"reportDUC_{plant.Plant_Name} {startDate.ToString("yyyy-MM-dd")}.xlsx", ducEmails);
@@ -1293,7 +1293,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     {
                         var dccDtoList = _mapper.Map<List<Application_logDto>>(dccLogs);
                         Stream dccStream = ExportExcleDccSendMail(dccDtoList);
-                        string dccBody = BuildEmailBody($"DCC Report - {plant.Plant_Name}", startDate, dccLogs);
+                        string dccBody = BuildEmailBody($"DCC Report - {plant.Plant_Name}", startDate, dccLogs, plant.Plant);
 
                         string dccEmails = string.Join(";", dccUsers.Select(u => u.emp_email));
                         await SendEmailAsync($"DCC Report - {plant.Plant_Name}", dccBody, dccStream, $"reportDCC_{plant.Plant_Name} {startDate.ToString("yyyy-MM-dd")}.xlsx", dccEmails);
@@ -1313,15 +1313,16 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         }
 
         // ===== ฟังก์ชันสร้าง body HTML =====
-        private string BuildEmailBody(string type, DateTime startDate, List<Application_log> logs)
+        private string BuildEmailBody(string type, DateTime startDate, List<Application_log> logs,string plant)
         {
 
             //var firstLog = logs.FirstOrDefault();
             var sb = new StringBuilder();
+            var appLog = logs.FirstOrDefault()?.App_log;
             sb.AppendLine("<html><body>");
             sb.AppendLine($"<h4>{type} dated {startDate:dd MMM yyyy}</h4>");
             sb.AppendLine(@"<a href=""https://fits/CRUDLogs/applog/report-log"">Go to website</a>");
-             sb.AppendLine(@$"<a href=""https://fits/CRUDLogs/applog/report-log/admin_confirm=000000"">Save all</a>");
+             sb.AppendLine(@$"<a href=""https://fits/CRUDLogs/applog/report-log/{plant}/{appLog}"">Save all</a>");
             if (logs.Count > 0)
             {
                 sb.AppendLine(@"<!DOCTYPE html>
@@ -1420,12 +1421,12 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         #endregion
 
 
-        public async Task<ResponseDto> SaveAllDayInEmail(string admin_confirm, DateTime date, string plant, string app_log)
+        public async Task<ResponseDto> SaveAllDayInEmail(DataAcceptDataAllEamil request,  string plant, string app_log)
         {
             try
             {
-                DateTime startDate = date.Date;
-                DateTime endDate = DateTime.Today.AddDays(1);
+                DateTime startDate = request.Datetime;
+                DateTime endDate = startDate.Date.AddDays(1);
                 string plantSuffix = "." + plant;
                 IQueryable<Application_log> query = _db.Application_Log.Where(x => x.App_log == app_log
                 && x.Action_date_time >= startDate && x.Action_date_time < endDate
@@ -1437,15 +1438,17 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
                 foreach (var item in obj)
                 {
-                    item.Admin_confirm = admin_confirm;
-                    item.Admin_confirm_comment = "save on email";
-                    item.Admin_confirm_date = DateTime.Now;
-                    item.Admin_confirm_event = "Usual Event";
+                    if (string.IsNullOrEmpty(item.Admin_confirm))
+                    {
+                        item.Admin_confirm = request.admin_confirm;
+                        item.Admin_confirm_comment = "save on email";
+                        item.Admin_confirm_date = DateTime.Now;
+                        item.Admin_confirm_event = "Usual Event";
+
+                        _db.Application_Log.Update(item);
+                    }
                 }
-
-               
-
-
+                  
                 await _db.SaveChangesAsync();
                  
             }
