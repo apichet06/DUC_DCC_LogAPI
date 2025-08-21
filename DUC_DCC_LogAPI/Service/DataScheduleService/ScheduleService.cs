@@ -77,30 +77,34 @@ namespace DUC_DCC_LogAPI.Service.DccService
                             Upload_datetime = DateTime.Now
                         }).ToList();
 
-                        var keys = entities.Select(e => (e.Group_name, e.Username, e.Action, e.Action_date_time, e.Detail)).ToList();
+                        // 1. สร้าง List ของ Key หลักๆ จากข้อมูลชุดใหม่ เพื่อใช้ในคำสั่ง WHERE IN
+                        var groupNamesInBatch = entities.Select(e => e.Group_name).Distinct().ToList();
+                        var usernamesInBatch = entities.Select(e => e.Username).Distinct().ToList();
+                        var actionsInBatch = entities.Select(e => e.Action).Distinct().ToList();
 
-                        var existing = await _dbContext.Application_Log
-                             .Where(a => keys.Any(k =>
-                                 k.Group_name == a.Group_name &&
-                                 k.Username == a.Username &&
-                                 k.Action == a.Action &&
-                                 k.Action_date_time == a.Action_date_time &&
-                                 k.Detail == a.Detail))
-                             .Select(a => new
-                             {
-                                 a.Group_name,
-                                 a.Username,
-                                 a.Action,
-                                 a.Action_date_time,
-                                 a.Detail
-                             }).ToListAsync();
+                        // 2. ดึงข้อมูลที่อาจจะซ้ำจาก DB โดยกรองคร่าวๆ ก่อน เพื่อลดปริมาณข้อมูลที่ต้องดึงมา
+                        //    EF Core สามารถแปลง Query นี้เป็น SQL ได้
+                        var potentiallyExistingLogs = await _dbContext.Application_Log
+                            .Where(a => groupNamesInBatch.Contains(a.Group_name) &&
+                                        usernamesInBatch.Contains(a.Username) &&
+                                        actionsInBatch.Contains(a.Action))
+                            .Select(a => new { a.Group_name, a.Username, a.Action, a.Action_date_time, a.Detail })
+                            .ToListAsync();
 
-                        var existingSet = existing.ToHashSet();
+                        // 3. สร้าง HashSet ของ Key จากข้อมูลที่มีอยู่แล้วใน DB เพื่อการค้นหาที่รวดเร็ว
+                        var existingKeys = potentiallyExistingLogs
+                            .Select(a => (a.Group_name, a.Username, a.Action, a.Action_date_time, a.Detail))
+                            .ToHashSet();
+
+                        // 4. กรองเฉพาะข้อมูลใหม่จริงๆ โดยเปรียบเทียบกับ HashSet (ทำงานใน Memory และเร็วมาก)
                         var newEntities = entities
-                            .Where(e => !existingSet.Contains(new { e.Group_name, e.Username, e.Action, e.Action_date_time, e.Detail }))
+                            .Where(e => !existingKeys.Contains((e.Group_name, e.Username, e.Action, e.Action_date_time, e.Detail)))
                             .ToList();
+
                         if (newEntities.Any())
+                        {
                             await _dbContext.AddRangeAsync(newEntities);
+                        }
                     }
 
                     await _dbContext.SaveChangesAsync();

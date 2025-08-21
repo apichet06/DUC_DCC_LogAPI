@@ -12,7 +12,7 @@ namespace DUC_DCC_LogAPI.Data
         public DbSet<dcc_crud_log> dcc_crud_log { get; set; }
         public DbSet<Duc_crud> Duc_Cruds { get; set; }
         public DbSet<Month> Month { get; set; }
-        public DbSet<App> app { get; set; }
+        public DbSet<App_Name> app_name { get; set; }
         public DbSet<Bu_Plant> bu_plant { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

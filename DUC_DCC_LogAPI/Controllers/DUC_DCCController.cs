@@ -77,10 +77,10 @@ namespace DUC_DCC_LogAPI.Controllers
             return Ok( await _DCC_Log.SendMailByPlant());
         }
 
-        [HttpGet("SaveAllDayInEmail/{plant}/{app_log}")]
-        public async Task<IActionResult> SaveAllDayInEmail([FromQuery] DataAcceptDataAllEamil request, string plant, string app_log)
+        [HttpPut("SaveAllDayInEmail/{plant}/{app_log}/{Datetime}")]
+        public async Task<IActionResult> SaveAllDayInEmail([FromBody] DataAcceptDataAllEamil request, DateTime Datetime, string plant, string app_log)
         {
-            return Ok(await _DCC_Log.SaveAllDayInEmail(request, plant, app_log));
+            return Ok(await _DCC_Log.SaveAllDayInEmail(request, Datetime, plant, app_log));
         }
 
 

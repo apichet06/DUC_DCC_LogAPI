@@ -24,7 +24,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         Task<ResponseDto> GetCountAuditLog();
         Task<ResponseDto> GetCountReportLog();
         Task<ResponseDto> SendMailByPlant();
-        Task<ResponseDto> SaveAllDayInEmail(DataAcceptDataAllEamil request, string plant, string app_log);
+        Task<ResponseDto> SaveAllDayInEmail(DataAcceptDataAllEamil request, DateTime Datetime, string plant, string app_log);
     }
 }
 

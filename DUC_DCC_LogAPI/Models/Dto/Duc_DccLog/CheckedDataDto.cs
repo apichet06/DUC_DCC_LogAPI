@@ -24,8 +24,7 @@
 
     public class DataAcceptDataAllEamil
     {
-        public string? admin_confirm { get; set; }
-        public DateTime Datetime { get; set; }
+        public string? admin_confirm { get; set; } 
 
     }
 }

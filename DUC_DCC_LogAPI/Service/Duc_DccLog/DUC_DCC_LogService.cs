@@ -1319,10 +1319,11 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             //var firstLog = logs.FirstOrDefault();
             var sb = new StringBuilder();
             var appLog = logs.FirstOrDefault()?.App_log;
+            var datetime = logs.FirstOrDefault()?.Action_date_time.Date.ToString("yyyy-MM-dd");
             sb.AppendLine("<html><body>");
             sb.AppendLine($"<h4>{type} dated {startDate:dd MMM yyyy}</h4>");
             sb.AppendLine(@"<a href=""https://fits/CRUDLogs/applog/report-log"">Go to website</a>");
-             sb.AppendLine(@$"<a href=""https://fits/CRUDLogs/applog/report-log/{plant}/{appLog}"">Save all</a>");
+            sb.AppendLine(@$"<a href=""http://localhost:5173/CRUDLogs/applog/updateDateOnEmail/{plant}/{appLog}/{datetime}"" target=""_blank"" >Save all</a>");
             if (logs.Count > 0)
             {
                 sb.AppendLine(@"<!DOCTYPE html>
@@ -1421,11 +1422,11 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         #endregion
 
 
-        public async Task<ResponseDto> SaveAllDayInEmail(DataAcceptDataAllEamil request,  string plant, string app_log)
+        public async Task<ResponseDto> SaveAllDayInEmail(DataAcceptDataAllEamil request,DateTime Datetime,string plant, string app_log)
         {
             try
             {
-                DateTime startDate = request.Datetime;
+                DateTime startDate =  Datetime.Date;
                 DateTime endDate = startDate.Date.AddDays(1);
                 string plantSuffix = "." + plant;
                 IQueryable<Application_log> query = _db.Application_Log.Where(x => x.App_log == app_log
@@ -1435,7 +1436,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 var obj = await query.ToListAsync();
                 //var mappList = _mapper.Map<List<Application_logDto>>(obj);
                 //_response.Result = mappList;
-
+                int count = 0;
                 foreach (var item in obj)
                 {
                     if (string.IsNullOrEmpty(item.Admin_confirm))
@@ -1446,10 +1447,14 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                         item.Admin_confirm_event = "Usual Event";
 
                         _db.Application_Log.Update(item);
+                        count++;
                     }
+
                 }
-                  
+
                 await _db.SaveChangesAsync();
+                _response.Result = $"รวม usual และ unusual ({count})";
+                _response.Message = _message.UpdateMessage;
                  
             }
             catch (Exception ex)
