@@ -603,7 +603,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     query = query.Where(x => x.Action_date_time < endDateExclusive);
                 }
 
-                var obj = await query.ToListAsync();
+                var obj = await query.OrderBy(a=>a.Event_type).ToListAsync();
                 var mappList = _mapper.Map<List<Application_logDto>>(obj); 
                 
                 _response.Result = mappList;
@@ -1270,35 +1270,56 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
                 foreach (var plant in plants)
                 {
-                    // ===== DUC =====
                     var ducLogs = allDucLogs.Where(x => x.Bu_code!.Split('.').Last() == plant.Plant).ToList();
                     var ducUsers = plantUsers.Where(u => u.Plant_Id == plant.Plant_Id).ToList();
 
-                    if (ducLogs.Count > 0 && ducUsers.Count > 0)
+                    if (ducUsers.Count > 0) // <-- ต่อให้ไม่มี log ก็ส่งได้
                     {
-                        var ducDtoList = _mapper.Map<List<Application_logDto>>(ducLogs);
-                        Stream ducStream = ExportExcleDucSendMail(ducDtoList);
-                    
-                        string ducBody = BuildEmailBody($"DUC Report - {plant.Plant_Name}", startDate, ducLogs,plant.Plant);
-                       
+                        Stream? ducStream = null;
+                        string fileName = $"reportDUC_{plant.Plant_Name} {startDate:yyyy-MM-dd}.xlsx";
+
+                        string ducBody;
+                        if (ducLogs.Count > 0)
+                        {
+                            var ducDtoList = _mapper.Map<List<Application_logDto>>(ducLogs);
+                            ducStream = ExportExcleDucSendMail(ducDtoList);
+                            ducBody = BuildEmailBody($"DUC Report - {plant.Plant_Name}", startDate, ducLogs, plant.Plant);
+                        }
+                        else
+                        {
+                            ducBody = $"<p>DUC Report - {plant.Plant_Name} dated {startDate:dd MMM yyyy}</p><p><b>ไม่มีข้อมูลในวันนี้</b></p>";
+                        }
+
                         string ducEmails = string.Join(";", ducUsers.Select(u => u.emp_email));
-                        await SendEmailAsync($"DUC Report - {plant.Plant_Name}", ducBody, ducStream, $"reportDUC_{plant.Plant_Name} {startDate.ToString("yyyy-MM-dd")}.xlsx", ducEmails);
+                        await SendEmailAsync($"DUC Report - {plant.Plant_Name}", ducBody, ducStream, fileName, ducEmails);
                     }
 
                     // ===== DCC =====
                     var dccLogs = allDccLogs.Where(x => x.Bu_code!.Split('.').Last() == plant.Plant).ToList();
                     var dccUsers = plantUsers.Where(u => u.Plant_Id == plant.Plant_Id).ToList();
 
-                    if (dccLogs.Count > 0 && dccUsers.Count > 0)
+                    if (dccUsers.Count > 0)
                     {
-                        var dccDtoList = _mapper.Map<List<Application_logDto>>(dccLogs);
-                        Stream dccStream = ExportExcleDccSendMail(dccDtoList);
-                        string dccBody = BuildEmailBody($"DCC Report - {plant.Plant_Name}", startDate, dccLogs, plant.Plant);
+                        Stream? dccStream = null;
+                        string fileName = $"reportDCC_{plant.Plant_Name} {startDate:yyyy-MM-dd}.xlsx";
+
+                        string dccBody;
+                        if (dccLogs.Count > 0)
+                        {
+                            var dccDtoList = _mapper.Map<List<Application_logDto>>(dccLogs);
+                            dccStream = ExportExcleDccSendMail(dccDtoList);
+                            dccBody = BuildEmailBody($"DCC Report - {plant.Plant_Name}", startDate, dccLogs, plant.Plant);
+                        }
+                        else
+                        {
+                            dccBody = $"<p>DCC Report - {plant.Plant_Name} dated {startDate:dd MMM yyyy}</p><p><b>ไม่มีข้อมูลในวันนี้</b></p>";
+                        }
 
                         string dccEmails = string.Join(";", dccUsers.Select(u => u.emp_email));
-                        await SendEmailAsync($"DCC Report - {plant.Plant_Name}", dccBody, dccStream, $"reportDCC_{plant.Plant_Name} {startDate.ToString("yyyy-MM-dd")}.xlsx", dccEmails);
+                        await SendEmailAsync($"DCC Report - {plant.Plant_Name}", dccBody, dccStream, fileName, dccEmails);
                     }
                 }
+
 
                 _response.Result = startDate.ToString("yyyy-MM-dd");
                 _response.Message = _message.SendmailSuccess;
@@ -1324,8 +1345,10 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             sb.AppendLine($"<h4>{type} dated {startDate:dd MMM yyyy}</h4>");
             sb.AppendLine(@"<a href=""https://fits/CRUDLogs/applog/report-log"">Go to website</a>");
             sb.AppendLine(@$"<a href=""http://localhost:5173/CRUDLogs/applog/updateDateOnEmail/{plant}/{appLog}/{datetime}"" target=""_blank"" >Save all</a>");
+            #region || html ||
             if (logs.Count > 0)
             {
+               
                 sb.AppendLine(@"<!DOCTYPE html>
                                 <html>
                                 <head>
@@ -1335,17 +1358,13 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                   border-collapse: collapse;
                                   width: 100%; 
                                 }
-
                                 #customers td, #customers th {
                                   border: 1px solid #ddd;
                                   padding: 5px;
                                   font-size: 11px;
                                 }
-
                                 #customers tr:nth-child(even) {background-color: #f2f2f2;}
-
                                 #customers tr:hover {background-color: #ddd;}
-
                                 #customers th {
                                   padding-top: 7px;
                                   padding-bottom: 7px;
@@ -1394,7 +1413,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             {
                 sb.AppendLine("<p>No data found.</p>");
             }
-
+            #endregion
             sb.AppendLine("</body></html>");
             return sb.ToString();
         }
@@ -1411,7 +1430,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             message.Subject = subject;
             message.Body = body;
             message.IsBodyHtml = true;
-            message.Attachments.Add(new Attachment(attachStream, fileName, ContentTypeConfig.Xlsx));
+            if (attachStream != null)  
+                message.Attachments.Add(new Attachment(attachStream, fileName, ContentTypeConfig.Xlsx));
 
             using var client = new SmtpClient(_smtpSettings.SmtpServer);
             client.EnableSsl = false;
