@@ -8,7 +8,7 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
     {
         Task<ResponseAuthen> Authen(AuthenDto authen);
         Task<ResponseAuthen> AuthenticateUserAsync(AuthenDto authen);
-        Task<ResponseDto> GetUserById(string id);
+        Task<ResponseDto> GetUserById(string emp_no);
         Task<ResponseDto> GetUserList(Users_Permission request);
     }
 }

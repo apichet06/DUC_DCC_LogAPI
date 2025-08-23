@@ -49,10 +49,10 @@ namespace DUC_DCC_LogAPI.Controllers
              
         }
 
-        [HttpGet("byId/{id}")]
-        public async Task<IActionResult> GetUserById(string id)
+        [HttpGet("byEmp/{emp_no}")]
+        public async Task<IActionResult> GetUserById(string emp_no)
         {
-            return Ok(await _authen.GetUserById(id));
+            return Ok(await _authen.GetUserById(emp_no));
         }
 
      

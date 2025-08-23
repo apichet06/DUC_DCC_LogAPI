@@ -54,7 +54,7 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
                                       username = a.username,
                                       firstname = a.firstname,
                                       lastname = a.lastname,
-                                      is_active = a.is_active,
+                                      is_email = a.is_email,
                                       is_accept = a.is_accept,
                                       is_review = a.is_review,
                                       App_Id = a.App_Id,
@@ -136,13 +136,13 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
 
         #endregion
 
-        public async Task<ResponseDto> GetUserById(string id)
+        public async Task<ResponseDto> GetUserById(string emp_no)
         {
             try
             {
                 var query = await (from a in _db.Users_Permission 
                                    join b in _db.bu_plant on a.Plant_Id equals b.Id 
-                                   where a.emp_no == id
+                                   where a.emp_no == emp_no
                                    select new UserResposeDto
                                    {
                                       Id = a.Id,
@@ -152,7 +152,7 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
                                       username = a.username,
                                       firstname = a.firstname,
                                       lastname = a.lastname,
-                                      is_active = a.is_active,
+                                      is_email = a.is_email,
                                       is_accept = a.is_accept,
                                       is_review = a.is_review,
                                       App_Id = a.App_Id,
@@ -185,7 +185,7 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
                                        username = a.username,
                                        firstname = a.firstname,
                                        lastname = a.lastname,
-                                       is_active = a.is_active,
+                                       is_email = a.is_email,
                                        is_accept = a.is_accept,
                                        is_review = a.is_review,
                                        App_Id = a.App_Id,

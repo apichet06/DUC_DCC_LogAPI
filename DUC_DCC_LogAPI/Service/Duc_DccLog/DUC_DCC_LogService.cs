@@ -567,8 +567,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         {
             try
             {
-
-                IQueryable<Application_log> query = _db.Application_Log.Where(x=>x.Admin_confirm == null && x.App_log == request.tapData && (x.Event_type == request.CheckBoxkUsual || x.Event_type == request.CheckBoxkUnusual))
+                string plantSuffix = "." + request.plant;
+                IQueryable<Application_log> query = _db.Application_Log.Where(x=>x.Admin_confirm == null && x.App_log == request.tapData && x.Bu_code!.EndsWith(plantSuffix) && (x.Event_type == request.CheckBoxkUsual || x.Event_type == request.CheckBoxkUnusual))
                      .OrderByDescending(a=>a.Action_date_time);
 
                 if (request != null && request.Search != null && request.Search.Any())
@@ -1238,7 +1238,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 var plantUsers = await (
                     from u in _db.Users_Permission
                     join p in _db.bu_plant on u.Plant_Id equals p.Id
-                    where u.is_active == 1
+                    where u.is_email
                     select new
                     {
                         u.emp_no,
@@ -1287,11 +1287,11 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                         }
                         else
                         {
-                            ducBody = $"<p>DUC Report - {plant.Plant_Name} dated {startDate:dd MMM yyyy}</p><p><b>ไม่มีข้อมูลในวันนี้</b></p>";
+                            ducBody = $"<p>DUC Report - {plant.Plant_Name} dated {startDate:dd MMM yyyy}</p><p><h5>&nbsp;&nbsp; The report log is currently empty. </h5></p>";
                         }
 
                         string ducEmails = string.Join(";", ducUsers.Select(u => u.emp_email));
-                        await SendEmailAsync($"DUC Report - {plant.Plant_Name}", ducBody, ducStream, fileName, ducEmails);
+                        await SendEmailAsync($"DUC Report - {plant.Plant_Name}", ducBody, ducStream!, fileName, ducEmails);
                     }
 
                     // ===== DCC =====
@@ -1312,11 +1312,11 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                         }
                         else
                         {
-                            dccBody = $"<p>DCC Report - {plant.Plant_Name} dated {startDate:dd MMM yyyy}</p><p><b>ไม่มีข้อมูลในวันนี้</b></p>";
+                            dccBody = $"<p>DCC Report - {plant.Plant_Name} dated {startDate:dd MMM yyyy}</p><p><h5>&nbsp;&nbsp; The report log is currently empty. </h5></p>";
                         }
 
                         string dccEmails = string.Join(";", dccUsers.Select(u => u.emp_email));
-                        await SendEmailAsync($"DCC Report - {plant.Plant_Name}", dccBody, dccStream, fileName, dccEmails);
+                        await SendEmailAsync($"DCC Report - {plant.Plant_Name}", dccBody, dccStream!, fileName, dccEmails);
                     }
                 }
 
@@ -1441,7 +1441,79 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         #endregion
 
+        public async Task<ResponseDto> SaveAllDateReportlog(SearchAndSaveDto request, string plant, string app_log)
+        {
+            try
+            {
+                string plantSuffix = "." + request.plant;
+                IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Admin_confirm == null && x.App_log == request.tapData && x.Bu_code!.EndsWith(plantSuffix) && (x.Event_type == request.CheckBoxkUsual || x.Event_type == request.CheckBoxkUnusual))
+                     .OrderByDescending(a => a.Action_date_time);
 
+                if (request != null && request.Search != null && request.Search.Any())
+                {
+                    string searchTerm = request.Search.ToLower();
+
+                    query = query.Where(x =>
+                        x.Id.ToString().Contains(searchTerm.Trim()) ||
+                        x.Group_name!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Username!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Action!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Detail!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Bu!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Position!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Event_type!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Unauthorized!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Download_more_10_files_day!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Employee_resigning_within_one_month!.ToLower().Contains(searchTerm.Trim()) ||
+                        x.Admin_confirm!.ToLower().Contains(searchTerm.Trim()));
+
+                }
+
+                if (request!.startDate.HasValue)
+                {
+                    DateTime startDate = request.startDate.Value.Date; // เอาเฉพาะส่วนวันที่ (เวลา 00:00:00)
+                    query = query.Where(x => x.Action_date_time >= startDate);
+                }
+
+                if (request.endDate.HasValue)
+                {
+                    DateTime endDateExclusive = request.endDate.Value.Date.AddDays(1); // เอาวันถัดไปตอน 00:00:00
+                    query = query.Where(x => x.Action_date_time < endDateExclusive);
+                }
+
+                var obj = await query.ToListAsync();
+                //var mappList = _mapper.Map<List<Application_logDto>>(obj);
+                //_response.Result = mappList;
+                int count = 0;
+                foreach (var item in obj)
+                {
+                    if (string.IsNullOrEmpty(item.Admin_confirm))
+                    {
+                        item.Admin_confirm = request.admin_confirm;
+                        item.Admin_confirm_comment = "save on email";
+                        item.Admin_confirm_date = DateTime.Now;
+                        item.Admin_confirm_event = "Usual Event";
+
+                        _db.Application_Log.Update(item);
+                        count++;
+                    }
+
+                }
+
+                await _db.SaveChangesAsync();
+                _response.Result = $"รวม usual และ unusual ({count})";
+                _response.Message = _message.UpdateMessage;
+
+            }
+            catch(Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.Message = _message.an_error_occurred + ex.Message;
+            }
+            return _response;
+        }
+
+        #region || SaveAllDayInEmail ||
         public async Task<ResponseDto> SaveAllDayInEmail(DataAcceptDataAllEamil request,DateTime Datetime,string plant, string app_log)
         {
             try
@@ -1484,5 +1556,6 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             }
             return _response;
         }
+        #endregion
     }
 }
