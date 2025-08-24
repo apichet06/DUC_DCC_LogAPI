@@ -57,9 +57,11 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
                                       is_email = a.is_email,
                                       is_accept = a.is_accept,
                                       is_review = a.is_review,
+                                      is_export = a.is_export,
                                       App_Id = a.App_Id,
                                       Status = a.Status,
-                                      Plant_Name = b.Plant_Name
+                                      Plant_Name = b.Plant_Name,
+                                      Plant_Id = a.Plant_Id
                                   }).FirstOrDefaultAsync(x => x.emp_email == authen.user_name);
 
                 if (user is null)
@@ -84,7 +86,7 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
                 var result = _mapper.Map<UserResposeDto>(user);
 
                 _resAuthen.token = new JwtSecurityTokenHandler().WriteToken(token);
-                _resAuthen.Result = result;
+                _resAuthen.Result = user;
                 _resAuthen.Message = _message.LoginSuccess;
 
 
@@ -135,75 +137,7 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
 
 
         #endregion
-
-        public async Task<ResponseDto> GetUserById(string emp_no)
-        {
-            try
-            {
-                var query = await (from a in _db.Users_Permission 
-                                   join b in _db.bu_plant on a.Plant_Id equals b.Id 
-                                   where a.emp_no == emp_no
-                                   select new UserResposeDto
-                                   {
-                                      Id = a.Id,
-                                      Plant = b.Plant,
-                                      emp_no = a.emp_no,
-                                      emp_email = a.emp_email,
-                                      username = a.username,
-                                      firstname = a.firstname,
-                                      lastname = a.lastname,
-                                      is_email = a.is_email,
-                                      is_accept = a.is_accept,
-                                      is_review = a.is_review,
-                                      App_Id = a.App_Id,
-                                      Status = a.Status,
-                                      Plant_Name = b.Plant_Name
-                                   }).ToListAsync(); 
-                _response.Result = query;
-            }
-
-            catch (Exception ex) {
-                _response.IsSuccess = false;
-                _response.Message = _message.an_error_occurred + ex.Message;
-                
-            }
-            return _response;
-        }
-
-        public async Task<ResponseDto> GetUserList(Users_Permission request)
-        {
-            try
-            {
-                var query = await (from a in _db.Users_Permission
-                                   join b in _db.bu_plant on a.Plant_Id equals b.Id 
-                                   select new UserResposeDto
-                                   {
-                                       Id = a.Id,
-                                       Plant = b.Plant,
-                                       emp_no = a.emp_no,
-                                       emp_email = a.emp_email,
-                                       username = a.username,
-                                       firstname = a.firstname,
-                                       lastname = a.lastname,
-                                       is_email = a.is_email,
-                                       is_accept = a.is_accept,
-                                       is_review = a.is_review,
-                                       App_Id = a.App_Id,
-                                       Status = a.Status,
-                                       Plant_Name = b.Plant_Name
-                                   }).ToListAsync();
-
-                _response.Result = _mapper.Map<List<UserResposeDto>>( query);
-            }
-
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.Message = _message.an_error_occurred + ex.Message;
-
-            }
-            return _response;
-        }
+         
 
     }
 }

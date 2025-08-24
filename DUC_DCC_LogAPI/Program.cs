@@ -7,6 +7,7 @@ using DUC_DCC_LogAPI.Service.AuthenService;
 using DUC_DCC_LogAPI.Service.Chart;
 using DUC_DCC_LogAPI.Service.DccService;
 using DUC_DCC_LogAPI.Service.Duc_DccLog;
+using DUC_DCC_LogAPI.Service.UserPermissionService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -52,7 +53,7 @@ builder.Services.AddScoped<IDUC_DCC_Log, DUC_DCC_LogService>();
 builder.Services.AddScoped<IAuthenService, AuthenService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IChart, ChartService>();
-
+builder.Services.AddScoped<IUserPermissionService, UserPermissionService>();
 
 IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();
 builder.Services.AddSingleton(mapper);

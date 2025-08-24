@@ -12,6 +12,7 @@
         public bool is_email { get; set; }
         public bool is_accept {  get; set; }
         public bool is_review { get; set; }
+        public bool is_export { get; set; }
         public string? App_Id { get; set; }
         public string? created_by { get; set; }
         public DateTime? Created_date { get; set; }

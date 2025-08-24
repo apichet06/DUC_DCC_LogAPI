@@ -168,28 +168,28 @@ namespace DUC_DCC_LogAPI.Service.DccService
                             Upload_datetime = DateTime.Now 
                         }).ToList();
 
-                        var keys = entities.Select(e => (e.Group_name, e.Username, e.Action, e.Action_date_time, e.Detail)).ToList();
+                        var existingAll = await _dbContext.Application_Log
+                           .Where(a => a.Action_date_time >= startDate && a.Action_date_time < endDate)
+                           .Select(a => new
+                           {
+                               a.Group_name,
+                               a.Username,
+                               a.Action,
+                               a.Action_date_time,
+                               a.Detail
+                           })
+                           .ToListAsync();
 
-                        var existing = await _dbContext.Application_Log
-                             .Where(a => keys.Any(k =>
-                                 k.Group_name == a.Group_name &&
-                                 k.Username == a.Username &&
-                                 k.Action == a.Action &&
-                                 k.Action_date_time == a.Action_date_time &&
-                                 k.Detail == a.Detail))
-                             .Select(a => new
-                             {
-                                 a.Group_name,
-                                 a.Username,
-                                 a.Action,
-                                 a.Action_date_time,
-                                 a.Detail
-                             }).ToListAsync();
+                        // ทำ HashSet จาก existing
+                        var existingSet = existingAll
+                            .Select(a => (a.Group_name, a.Username, a.Action, a.Action_date_time, a.Detail))
+                            .ToHashSet();
 
-                        var existingSet = existing.ToHashSet();
+                        // filter เฉพาะตัวใหม่
                         var newEntities = entities
-                            .Where(e => !existingSet.Contains(new { e.Group_name, e.Username, e.Action, e.Action_date_time, e.Detail }))
+                            .Where(e => !existingSet.Contains((e.Group_name, e.Username, e.Action, e.Action_date_time, e.Detail)))
                             .ToList();
+
                         if (newEntities.Any())
                             await _dbContext.AddRangeAsync(newEntities);
                     }

@@ -7,11 +7,13 @@
         public string? emp_no { get; set; }
         public string? emp_email { get; set; }
         public string? username { get; set; }
+        public string? fullname { get; set; }
         public string? firstname { get; set; }
         public string? lastname { get; set; }
         public bool is_email { get; set; }
         public bool is_accept { get; set; }
         public bool is_review { get; set; }
+        public bool is_export { get; set; }
         public string? App_Id { get; set; }
         public string? created_by { get; set; }
         public DateTime? Created_date { get; set; }
@@ -20,6 +22,6 @@
         public string? Status { get; set; }
         public string? Plant { get; set; }
         public string? Plant_Name { get; set; }
-
+        public string? App_Names { get; set; }
     }
 }

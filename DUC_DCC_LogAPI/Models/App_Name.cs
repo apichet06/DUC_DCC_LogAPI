@@ -3,6 +3,6 @@
     public class App_Name
     {
         public int Id { get; set; }
-        public int App_log { get; set; }
+        public string? App_log { get; set; }
     }
 }

@@ -276,7 +276,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         public async Task<byte[]> ExportExcelLog(SearchDto request)
         {
-            IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Admin_confirm == null && x.App_log == request.tapData && (x.Event_type == request.CheckBoxkUsual || x.Event_type == request.CheckBoxkUnusual));
+            IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Admin_confirm == null && x.App_log == request.tapData && (x.Event_type == request.CheckBoxUsual || x.Event_type == request.CheckBoxUnusual));
 
             //if (query == null)
             //      _response.Message = _message.Not_found;
@@ -568,7 +568,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             try
             {
                 string plantSuffix = "." + request.plant;
-                IQueryable<Application_log> query = _db.Application_Log.Where(x=>x.Admin_confirm == null && x.App_log == request.tapData && x.Bu_code!.EndsWith(plantSuffix) && (x.Event_type == request.CheckBoxkUsual || x.Event_type == request.CheckBoxkUnusual))
+                IQueryable<Application_log> query = _db.Application_Log.Where(x=>x.Admin_confirm == null && x.App_log == request.tapData && x.Bu_code!.EndsWith(plantSuffix) && (x.Event_type == request.CheckBoxUsual || x.Event_type == request.CheckBoxUnusual))
                      .OrderByDescending(a=>a.Action_date_time);
 
                 if (request != null && request.Search != null && request.Search.Any())
@@ -1130,11 +1130,12 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         private IQueryable<SaveDUC_DCC_logDto> BuildSaveLogQuery(SearchDto request)
         {
+            string plantSuffix = "." + request.plant;
             // เตรียม applog ตามเงื่อนไขหลัก
             var applog = _db.Application_Log
                 .Where(x => x.Admin_confirm != null
-                    && x.App_log == request.tapData
-                    && (x.Event_type == request.CheckBoxkUsual || x.Event_type == request.CheckBoxkUnusual));
+                    && x.App_log == request.tapData && x.Bu_code!.EndsWith(plantSuffix)
+                    && (x.Event_type == request.CheckBoxUsual || x.Event_type == request.CheckBoxUnusual));
 
             // join + search ในฝั่ง DB
             var applogWithJoin = from a in applog
@@ -1446,7 +1447,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             try
             {
                 string plantSuffix = "." + request.plant;
-                IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Admin_confirm == null && x.App_log == request.tapData && x.Bu_code!.EndsWith(plantSuffix) && (x.Event_type == request.CheckBoxkUsual || x.Event_type == request.CheckBoxkUnusual))
+                IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Admin_confirm == null && x.App_log == request.tapData && x.Bu_code!.EndsWith(plantSuffix) && (x.Event_type == request.CheckBoxUsual || x.Event_type == request.CheckBoxUnusual))
                      .OrderByDescending(a => a.Action_date_time);
 
                 if (request != null && request.Search != null && request.Search.Any())

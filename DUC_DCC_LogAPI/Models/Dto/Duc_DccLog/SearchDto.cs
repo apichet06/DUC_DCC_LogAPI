@@ -6,8 +6,8 @@
         public DateTime? startDate { get; set; }
         public DateTime? endDate { get; set; } 
         public string? tapData { get; set; }
-        public string? CheckBoxkUsual { get; set; }
-        public string? CheckBoxkUnusual { get; set; }
+        public string? CheckBoxUsual { get; set; }
+        public string? CheckBoxUnusual { get; set; }
         public string? plant { get; set; }
         
     }
@@ -18,8 +18,8 @@
         public DateTime? startDate { get; set; }
         public DateTime? endDate { get; set; }
         public string? tapData { get; set; }
-        public string? CheckBoxkUsual { get; set; }
-        public string? CheckBoxkUnusual { get; set; }
+        public string? CheckBoxUsual { get; set; }
+        public string? CheckBoxUnusual { get; set; }
         public string? plant { get; set; }
         public string? admin_confirm { get; set; }
 

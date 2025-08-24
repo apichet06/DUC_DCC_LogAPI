@@ -49,18 +49,7 @@ namespace DUC_DCC_LogAPI.Controllers
              
         }
 
-        [HttpGet("byEmp/{emp_no}")]
-        public async Task<IActionResult> GetUserById(string emp_no)
-        {
-            return Ok(await _authen.GetUserById(emp_no));
-        }
-
-     
-        [HttpGet("users/")]
-        public async Task<IActionResult> GetUserList([FromQuery] Users_Permission request)
-        {
-            return Ok(await _authen.GetUserList(request));
-        }
+    
         
     }
 }
