@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using DocumentFormat.OpenXml.Bibliography;
 using DUC_DCC_LogAPI.Data;
+using DUC_DCC_LogAPI.Models;
 using DUC_DCC_LogAPI.Models.Dto;
 using DUC_DCC_LogAPI.Models.Dto.Chart;
 using Microsoft.EntityFrameworkCore;
@@ -22,11 +23,11 @@ namespace DUC_DCC_LogAPI.Service.Chart
           
         }
 
-        public async Task<ResponseDto> GetChartBarAsync(int Year)
+        public async Task<ResponseDto> GetChartBarAsync(int Year,string plant)
         {
             try
             {
-
+                string plantSuffix = "." + plant; 
                 #region || backUp ||
                 // var query = from a in _db.Month
                 //             join b in _db.Application_Log on a.Id equals  b.Action_date_time.Month into ab
@@ -54,15 +55,15 @@ namespace DUC_DCC_LogAPI.Service.Chart
                 #endregion
 
                 var query = from month in _db.Month
-                            join log in _db.Application_Log.Where(l => l.Action_date_time.Year == Year)
+                            join log in _db.Application_Log.Where(l => l.Action_date_time.Year == Year && l.Bu_code!.EndsWith(plantSuffix)) 
                             on month.Id equals log.Action_date_time.Month into monthLogs
-                            from ml in monthLogs.DefaultIfEmpty()  
+                            from ml in monthLogs.DefaultIfEmpty() 
+                           
                             group ml by new   
                             {
                                 month.Id,
                                 month.Name,
-                                AppLog = ml.App_log,
-                               
+                                AppLog = ml.App_log, 
                             } into g
                            
                             select new BarCharDto
@@ -85,13 +86,13 @@ namespace DUC_DCC_LogAPI.Service.Chart
             return _response;
         }
 
-        public async Task<ResponseDto> GetChartDataAsync(int Year)
+        public async Task<ResponseDto> GetChartDataAsync(int Year, string plant)
         {
             try
             {
-
+                string plantSuffix = "." + plant;
                 var query = from log in _db.Application_Log
-                            where log.Action_date_time.Year == Year
+                            where log.Action_date_time.Year == Year && log.Bu_code!.EndsWith(plantSuffix)
                             group log by log.App_log into logGroup
                             select new ChartDto
                             {

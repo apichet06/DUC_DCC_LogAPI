@@ -33,8 +33,8 @@ namespace DUC_DCC_LogAPI.Controllers
                 Expires = DateTime.Now.AddDays(3)
             });
              
-            return Redirect("http://localhost:5173/CRUDLogs/applog/");
-            //return Redirect("https://fits/CRUDLogs/applog");
+            //return Redirect("http://localhost:5173/CRUDLogs/applog/");
+            return Redirect("https://fits/CRUDLogs/applog");
 
             #region || backup ||
             //var userJson = System.Text.Json.JsonSerializer.Serialize(authResult.User);
@@ -46,7 +46,7 @@ namespace DUC_DCC_LogAPI.Controllers
             //    Expires = DateTime.UtcNow.AddMinutes(60)
             //}); 
             #endregion
-             
+
         }
 
     

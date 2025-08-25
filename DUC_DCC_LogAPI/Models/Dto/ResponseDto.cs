@@ -52,7 +52,7 @@ namespace DUC_DCC_LogAPI.Models.Dto
         public string UpdateMessage { get; set; } = "อับเดทข้อมูลสำเร็จ!";
         public string DeleteMessage { get; set; } = "ลบข้อมูลสำเร็จ!";
         public string Not_found { get; set; } = "ไม่พบข้อมูล!";
-        public string already_exists { get; set; } = "ข้อมูลนี้มีอยู่แล้ว : ";
+        public string already_exists { get; set; } = "Already exists. : ";
         public string an_error_occurred { get; set; } = "เกิดข้อผิดพลาด 500 : ";
         public string Approved_status { get; set; } = "ดำเนินการสำเร็จ!";
         public string changPassword { get; set; } = "เปลี่ยนรหัสผ่านสำเร็จ!";
