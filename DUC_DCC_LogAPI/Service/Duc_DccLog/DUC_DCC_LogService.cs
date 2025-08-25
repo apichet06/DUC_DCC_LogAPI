@@ -1343,9 +1343,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             var appLog = logs.FirstOrDefault()?.App_log;
             var datetime = logs.FirstOrDefault()?.Action_date_time.Date.ToString("yyyy-MM-dd");
             sb.AppendLine("<html><body>");
-            sb.AppendLine($"<h4>{type} dated {startDate:dd MMM yyyy}</h4>");
-            sb.AppendLine(@"<a href=""https://fits/CRUDLogs/applog/report-log"">Go to website</a>");
-            sb.AppendLine(@$"<a href=""http://localhost:5173/CRUDLogs/applog/updateDateOnEmail/{plant}/{appLog}/{datetime}"" target=""_blank"" >Save all</a>");
+       
             #region || html ||
             if (logs.Count > 0)
             {
@@ -1354,29 +1352,81 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                 <html>
                                 <head>
                                 <style>
-                                #customers {
-                                  font-family: Arial, Helvetica, sans-serif;
-                                  border-collapse: collapse;
-                                  width: 100%; 
-                                }
-                                #customers td, #customers th {
-                                  border: 1px solid #ddd;
-                                  padding: 5px;
-                                  font-size: 11px;
-                                }
-                                #customers tr:nth-child(even) {background-color: #f2f2f2;}
-                                #customers tr:hover {background-color: #ddd;}
-                                #customers th {
-                                  padding-top: 7px;
-                                  padding-bottom: 7px;
-                                  text-align: left;
-                                  background-color: #04AA6D;
+                              #customers {
+                                   font-family: Arial, Helvetica, sans-serif;
+                                   border-collapse: collapse;
+                                   width: 100%; 
+                                 }
+                                 #customers td, #customers th {
+                                   border: 1px solid #ddd;
+                                   padding: 5px;
+                                   font-size: 11px;
+                                 }
+                                 #customers tr:nth-child(even) {background-color: #f2f2f2;}
+                                 #customers tr:hover {background-color: #ddd;}
+                                 #customers th {
+                                   padding-top: 7px;
+                                   padding-bottom: 7px;
+                                   text-align: left;
+                                   background-color: #04AA6D;
+                                   color: white;
+                                 }
+                                 a.button {
+                                  display: inline-block;
+                                  padding: 7px 15px;
+                                  margin: 5px 8px 3px 0;
+                                  font-size: 14px;
+                                  font-weight: bold;
+                                  text-decoration: none;
                                   color: white;
+                                  border-radius: 8px;
+                                  transition: background-color 0.3s ease;
+                                }
+
+                                a.green {
+                                  background-color: #04AA6D;
+                                }
+                                a.green:hover {
+                                  background-color: #038a59;
+                                }
+
+                                a.blue {
+                                  background-color: #2196F3;
+                                }
+                                a.blue:hover {
+                                  background-color: #1976D2;
+                                }
+
+                                a.btn-action {
+                                  display: inline-block;
+                                  padding: 3px 8px;
+                                  font-size: 11px;
+                                  text-decoration: none;
+                                  color: #fff;
+                                  background-color: #ff9800; /* สีส้ม */
+                                  border-radius: 5px;
+                                  transition: background-color 0.3s ease;
+                                }
+                                a.btn-action:hover {
+                                  background-color: #e68900;
                                 }
                                 </style>
                                 </head>
                                 <body>");
-
+                sb.AppendLine($"<h4>{type} dated {startDate:dd MMM yyyy}</h4>");
+                sb.AppendLine(@"<a href=""https://fits/CRUDLogs/applog/report-log"" class=""button green"">Go to website</a>");
+                sb.AppendLine($@"
+                    <div style=""background-color:#e8f4fd; border:1px solid #b6e0fe; padding:15px; margin:15px 0; border-radius:5px; font-size:13px; color:#084298; display:flex; align-items:center; justify-content:space-between;"">
+                        <div>
+                           &#9989; I have reviewed the data in the table and confirm that all records are 
+                            <strong>Usual Events</strong> before saving.
+                        </div>
+                        <a href=""https://fits/CRUDLogs/applog/updateDateOnEmail/{plant}/{appLog}/{datetime}"" 
+                           target=""_blank"" class=""button blue"" style=""padding:5px 12px; font-size:13px;"">
+                           Save all
+                        </a>
+                    </div>
+                    "); 
                 sb.AppendLine(@"<table id=""customers"">
                         <tr>
                           <th>No</th>
@@ -1404,7 +1454,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                   <td>{log.Bu}</td>
                   <td>{log.Position}</td>
                   <td style='color:{color}'>{log.Event_type}</td>
-                  <td><a href='https://fits/CRUDLogs/applog/report-log/{log.Id}/{log.App_log}'>view/update</a></td>
+                  <td><a href='https://fits/CRUDLogs/applog/report-log/{log.Id}/{log.App_log}' class=""btn-action"">view/update</a></td>
                 </tr>");
                 }
 
