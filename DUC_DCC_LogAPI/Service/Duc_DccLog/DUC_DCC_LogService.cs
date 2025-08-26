@@ -1255,7 +1255,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
                 // ดึง plant ทั้งหมดจาก user
                 var plants = plantUsers
-                    .Select(u => new { u.Plant_Id,u.Plant, u.Plant_Name,u.emp_email })
+                    .Select(u => new { u.Plant_Id,u.Plant, u.Plant_Name })
                     .Distinct();
 
                 // ===== ดึง log ทั้งหมดของวันนี้ =====
@@ -1500,12 +1500,12 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             message.From = new MailAddress(_smtpSettings.SenderEmail!, _smtpSettings.SenderName);
 
             foreach (var email in toEmails.Split(';'))
-            message.To.Add(email);
+                message.To.Add(email);
 
             message.Subject = subject;
             message.Body = body;
             message.IsBodyHtml = true;
-            if (attachStream != null)  
+            if (attachStream != null)
                 message.Attachments.Add(new Attachment(attachStream, fileName, ContentTypeConfig.Xlsx));
 
             using var client = new SmtpClient(_smtpSettings.SmtpServer);
@@ -1513,6 +1513,36 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             client.UseDefaultCredentials = false;
             await client.SendMailAsync(message);
         }
+
+        #region  backup email
+        //private async Task SendEmailAsync(string subject, string body, Stream attachStream, string fileName, string toEmails)
+        //{
+        //    using var message = new MailMessage();
+        //    message.From = new MailAddress(_smtpSettings.SenderEmail!, _smtpSettings.SenderName);
+
+        //    foreach (var email in toEmails.Split(';'))
+        //    {
+        //        if (!string.IsNullOrWhiteSpace(email))
+        //            message.To.Add(email);
+        //    }
+
+        //    message.Subject = subject;
+        //    message.Body = body;
+        //    message.IsBodyHtml = true;
+
+        //    if (attachStream != null)
+        //        message.Attachments.Add(new Attachment(attachStream, fileName, ContentTypeConfig.Xlsx));
+
+        //    using var client = new SmtpClient(_smtpSettings.SmtpServer, _smtpSettings.SmtpPort)
+        //    {
+        //        EnableSsl = true,
+        //        UseDefaultCredentials = false,
+        //        Credentials = new NetworkCredential(_smtpSettings.Username, _smtpSettings.Password)
+        //    };
+
+        //    await client.SendMailAsync(message);
+        //}
+        #endregion
 
         #endregion
 
