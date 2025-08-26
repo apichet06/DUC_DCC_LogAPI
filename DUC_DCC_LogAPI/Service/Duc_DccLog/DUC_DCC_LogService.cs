@@ -1152,7 +1152,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                        (a.Position ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
                                        (a.Unauthorized ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
                                        (a.Download_more_10_files_day ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
-                                       (a.Employee_resigning_within_one_month ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       (a.Employee_resigning_within_one_month ?? "").ToLower().Contains(request.Search.ToLower().Trim())  ||
                                        ((ab.firstname + " " + ab.lastname) ?? "").ToLower().Contains(request.Search.ToLower().Trim())  
                                  )
                                  select new { a, ab, ac };
@@ -1414,20 +1414,44 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                 </head>
                                 <body>");
                 sb.AppendLine($"<h4>{type} dated {startDate:dd MMM yyyy}</h4>");
-                sb.AppendLine(@"<a href=""https://fits/CRUDLogs/applog/report-log"" class=""button green"">Go to website</a>");
+                sb.AppendLine(@"<table border='0' cellpadding='0' cellspacing='0' role='presentation' style='margin: 5px 8px 3px 0;'>
+          <tr>
+            <td align='center' bgcolor='#04AA6D' style='border-radius: 8px; background: #04AA6D;'>
+              <a href='https://fits/CRUDLogs/applog/reportlog' target='_blank' style='font-size: 14px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #ffffff; text-decoration: none; border-radius: 8px; padding: 7px 15px; border: 1px solid #04AA6D; display: inline-block;'>
+                Go to website
+              </a>
+            </td>
+          </tr>
+        </table>");
                 sb.AppendLine($@"
-                    <div style=""background-color:#e8f4fd; border:1px solid #b6e0fe; padding:15px; margin:15px 0; border-radius:5px; font-size:13px; color:#084298; display:flex; align-items:center; justify-content:space-between;"">
-                        <div>
-                           &#9989; I have reviewed the data in the table and confirm that all records are 
-                            <strong>Usual Events</strong> before saving.
-                        </div>
-                        <a href=""https://fits/CRUDLogs/applog/updateDateOnEmail/{plant}/{appLog}/{datetime}"" 
-                           target=""_blank"" class=""button blue"" style=""padding:5px 12px; font-size:13px;"">
-                           Save all
-                        </a>
-                    </div>
+                    <table border='0' cellpadding='0' cellspacing='0' width='100%' style='margin: 15px 0;'>
+                      <tr>
+                        <td style='background-color:#e8f4fd; border:1px solid #b6e0fe; border-radius:5px;'>
+                          <table border='0' cellpadding='0' cellspacing='0' width='100%'>
+                            <tr>
+                              <td style='padding: 15px; font-family: Arial, Helvetica, sans-serif; font-size:13px; color:#084298; vertical-align:middle;'>
+                                &#9989; I have reviewed the data in the table and confirm that all records are <strong>Usual Events</strong> before saving.
+                              </td>
+                              <td width='20' style='width:20px;'>&nbsp;</td>
+                              <td align='right' style='padding: 15px; vertical-align:middle;' width='100'>
+                                <!-- Blue 'Save all' Button -->
+                                <table border='0' cellpadding='0' cellspacing='0' role='presentation'>
+                                  <tr>
+                                    <td align='center' bgcolor='#2196F3' style='border-radius: 8px; background: #2196F3;'>
+                                      <a href='https://fits/CRUDLogs/applog/updateDateOnEmail/{plant}/{appLog}/{datetime}' target='_blank' style='font-size: 13px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #ffffff; text-decoration: none; border-radius: 8px; padding: 5px 12px; border: 1px solid #2196F3; display: inline-block;'>
+                                        Save all
+                                      </a>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
                     "); 
-                sb.AppendLine(@"<table id=""customers"">
+                sb.AppendLine(@"<table id='customers'>
                         <tr>
                           <th>No</th>
                           <th>Group Name</th>
@@ -1437,7 +1461,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                           <th>BU</th>
                           <th>Position</th>
                           <th>Event Type</th>
-                          <th>...</th>
+                          <th></th>
                         </tr>");
 
                 int index = 1;
@@ -1454,7 +1478,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                   <td>{log.Bu}</td>
                   <td>{log.Position}</td>
                   <td style='color:{color}'>{log.Event_type}</td>
-                  <td><a href='https://fits/CRUDLogs/applog/report-log/{log.Id}/{log.App_log}' class=""btn-action"">view/update</a></td>
+                  <td><a href='https://fits/CRUDLogs/applog/reportlog/{log.Id}/{log.App_log}' class=""btn-action"">view/update</a></td>
                 </tr>");
                 }
 
