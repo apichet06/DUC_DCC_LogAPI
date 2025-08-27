@@ -1232,7 +1232,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         {
             try
             {
-                DateTime startDate = DateTime.Today.AddDays(-2);
+                DateTime startDate = DateTime.Today.AddDays(-1);
                 DateTime endDate = DateTime.Today;
 
                 // ดึง user + plant name ที่ active และ accept
@@ -1255,7 +1255,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
                 // ดึง plant ทั้งหมดจาก user
                 var plants = plantUsers
-                    .Select(u => new { u.Plant_Id,u.Plant, u.Plant_Name })
+                    .Select(u => new { u.Plant_Id,u.Plant, u.Plant_Name})
                     .Distinct();
 
                 // ===== ดึง log ทั้งหมดของวันนี้ =====
