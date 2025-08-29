@@ -25,8 +25,7 @@ namespace DUC_DCC_LogAPI.Service.UserPermissionService
    
         }
 
-    
-
+     
         public async Task<ResponseDto> GetUserById(string emp_no)
         {
             try

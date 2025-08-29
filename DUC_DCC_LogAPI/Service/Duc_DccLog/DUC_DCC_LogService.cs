@@ -126,8 +126,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                  
             }
             catch (Exception ex)
-            {
-
+            { 
                 _response.IsSuccess = false;
                 _response.Message = _message.an_error_occurred + ex.Message;
             }
@@ -1202,8 +1201,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         #endregion
 
-        #region || GetSaveLog confirm ||
-
+        #region || GetSaveLog confirm || 
         public async Task<ResponseDto> GetSaveLogList(SearchDto request)
         {
             try
@@ -1417,7 +1415,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 sb.AppendLine(@"<table border='0' cellpadding='0' cellspacing='0' role='presentation' style='margin: 5px 8px 3px 0;'>
           <tr>
             <td align='center' bgcolor='#04AA6D' style='border-radius: 8px; background: #04AA6D;'>
-              <a href='https://fits/CRUDLogs/applog/reportlog' target='_blank' style='font-size: 14px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #ffffff; text-decoration: none; border-radius: 8px; padding: 7px 15px; border: 1px solid #04AA6D; display: inline-block;'>
+              <a href='https://fits/CRUDLogs/applog/report-chackall' target='_blank' style='font-size: 14px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #ffffff; text-decoration: none; border-radius: 8px; padding: 7px 15px; border: 1px solid #04AA6D; display: inline-block;'>
                 Go to website
               </a>
             </td>
@@ -1648,6 +1646,9 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     }
 
                 }
+
+                
+
 
                 await _db.SaveChangesAsync();
                 _response.Result = $"รวม usual และ unusual ({count})";
