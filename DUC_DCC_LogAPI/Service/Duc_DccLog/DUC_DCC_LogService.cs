@@ -602,7 +602,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     query = query.Where(x => x.Action_date_time < endDateExclusive);
                 }
 
-                var obj = await query.OrderBy(a=>a.Event_type).ToListAsync();
+                var obj = await query.OrderBy(a => a.Event_type == "Unusual Event" ? 0 : 1).ThenByDescending(a => a.Action_date_time).ToListAsync();
                 var mappList = _mapper.Map<List<Application_logDto>>(obj); 
                 
                 _response.Result = mappList;
@@ -1206,7 +1206,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         {
             try
             {
-                IEnumerable<SaveDUC_DCC_logDto> obj = await BuildSaveLogQuery(request).OrderBy(a => a.Event_type).ToListAsync();
+                IEnumerable<SaveDUC_DCC_logDto> obj = await BuildSaveLogQuery(request).OrderBy(a => a.Event_type == "Unusual Event" ? 0 : 1).ThenByDescending(a => a.Action_date_time).ToListAsync();
+                 
                 IEnumerable<SaveDUC_DCC_logDto> mappDataList = _mapper.Map<IEnumerable<SaveDUC_DCC_logDto>>(obj);
 
                 _response.Result = mappDataList;
@@ -1437,7 +1438,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                   <tr>
                                     <td align='center' bgcolor='#2196F3' style='border-radius: 8px; background: #2196F3;'>
                                       <a href='https://fits/CRUDLogs/applog/updateDateOnEmail/{plant}/{appLog}/{datetime}' target='_blank' style='font-size: 13px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #ffffff; text-decoration: none; border-radius: 8px; padding: 5px 12px; border: 1px solid #2196F3; display: inline-block;'>
-                                        Save all
+                                        Confirm
                                       </a>
                                     </td>
                                   </tr>
