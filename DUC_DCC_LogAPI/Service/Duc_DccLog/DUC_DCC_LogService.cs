@@ -603,7 +603,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     query = query.Where(x => x.Action_date_time < endDateExclusive);
                 }
 
-                var obj = await query.OrderBy(a=>a.Event_type).ToListAsync();
+                var obj = await query.OrderBy(a => a.Event_type == "Unusual Event" ? 0 : 1).ThenByDescending(a => a.Action_date_time).ToListAsync();
                 var mappList = _mapper.Map<List<Application_logDto>>(obj); 
                 
                 _response.Result = mappList;
@@ -1207,7 +1207,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         {
             try
             {
-                IEnumerable<SaveDUC_DCC_logDto> obj = await BuildSaveLogQuery(request).OrderBy(a => a.Event_type).ToListAsync();
+                IEnumerable<SaveDUC_DCC_logDto> obj = await BuildSaveLogQuery(request).OrderBy(a => a.Event_type == "Unusual Event" ? 0 : 1).ThenByDescending(a => a.Action_date_time).ToListAsync();
+                 
                 IEnumerable<SaveDUC_DCC_logDto> mappDataList = _mapper.Map<IEnumerable<SaveDUC_DCC_logDto>>(obj);
 
                 _response.Result = mappDataList;
