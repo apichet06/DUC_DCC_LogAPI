@@ -6,6 +6,7 @@ using DUC_DCC_LogAPI.Data;
 using DUC_DCC_LogAPI.Models; 
 using DUC_DCC_LogAPI.Models.Dto;
 using DUC_DCC_LogAPI.Models.Dto.Duc_DccLog;
+using DUC_DCC_LogAPI.Models.Dto.History;
 using DUC_DCC_LogAPI.Models.Dto.SaveDuc_DccLog; 
 using DUC_DCC_LogAPI.Models.Dtos;
 using MailKit.Search;
@@ -1415,7 +1416,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 sb.AppendLine(@"<table border='0' cellpadding='0' cellspacing='0' role='presentation' style='margin: 5px 8px 3px 0;'>
           <tr>
             <td align='center' bgcolor='#04AA6D' style='border-radius: 8px; background: #04AA6D;'>
-              <a href='https://fits/CRUDLogs/applog/report-chackall' target='_blank' style='font-size: 14px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #ffffff; text-decoration: none; border-radius: 8px; padding: 7px 15px; border: 1px solid #04AA6D; display: inline-block;'>
+              <a href='https://fits/CRUDLogs/applog/reportlog' target='_blank' style='font-size: 14px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #ffffff; text-decoration: none; border-radius: 8px; padding: 7px 15px; border: 1px solid #04AA6D; display: inline-block;'>
                 Go to website
               </a>
             </td>
@@ -1432,12 +1433,12 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                               </td>
                               <td width='20' style='width:20px;'>&nbsp;</td>
                               <td align='right' style='padding: 15px; vertical-align:middle;' width='100'>
-                                <!-- Blue 'Save all' Button -->
+                                
                                 <table border='0' cellpadding='0' cellspacing='0' role='presentation'>
                                   <tr>
                                     <td align='center' bgcolor='#2196F3' style='border-radius: 8px; background: #2196F3;'>
-                                      <a href='https://fits/CRUDLogs/applog/updateDateOnEmail/{plant}/{appLog}/{datetime}' target='_blank' style='font-size: 13px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #ffffff; text-decoration: none; border-radius: 8px; padding: 5px 12px; border: 1px solid #2196F3; display: inline-block;'>
-                                        Save all
+                                      <a href='http://localhost:5173/CRUDLogs/applog/updateDateOnEmail/{plant}/{appLog}/{datetime}' target='_blank' style='font-size: 13px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #ffffff; text-decoration: none; border-radius: 8px; padding: 5px 12px; border: 1px solid #2196F3; display: inline-block;'>
+                                        Confirm
                                       </a>
                                     </td>
                                   </tr>
@@ -1549,8 +1550,12 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             try
             {
                 string plantSuffix = "." + request.plant;
-                IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Admin_confirm == null && x.App_log == request.tapData && x.Bu_code!.EndsWith(plantSuffix) && (x.Event_type == request.CheckBoxUsual || x.Event_type == request.CheckBoxUnusual))
+                IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Admin_confirm == null && x.App_log == request.tapData && x.Bu_code!.EndsWith(plantSuffix)&& x.Event_type == "unusual event" && (x.Event_type == request.CheckBoxUsual || x.Event_type == request.CheckBoxUnusual))
                      .OrderByDescending(a => a.Action_date_time);
+
+                Historys historys = new Historys();
+
+                var user = await _db.Users_Permission.FirstOrDefaultAsync(a => a.emp_no == request.admin_confirm);
 
                 if (request != null && request.Search != null && request.Search.Any())
                 {
@@ -1588,6 +1593,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 //var mappList = _mapper.Map<List<Application_logDto>>(obj);
                 //_response.Result = mappList;
                 int count = 0;
+                
                 foreach (var item in obj)
                 {
                     if (string.IsNullOrEmpty(item.Admin_confirm))
@@ -1598,9 +1604,18 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                         item.Admin_confirm_event = "Usual Event";
 
                         _db.Application_Log.Update(item);
+                        historys.fullname = $"{user!.firstname} {user.lastname}"; 
+                        historys.emp_no = request.admin_confirm;
+                        historys.details = item.Detail;
+                        historys.action = "Confrime on email";
+                        historys.app_logId = item.Id;
+                        historys.app_log = item.App_log;
+                        _db.history.Add(historys);
+
                         count++;
                     }
 
+  
                 }
 
                 await _db.SaveChangesAsync();

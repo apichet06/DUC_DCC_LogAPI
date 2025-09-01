@@ -14,6 +14,7 @@ namespace DUC_DCC_LogAPI.Data
         public DbSet<Month> Month { get; set; }
         public DbSet<App_Name> app_name { get; set; }
         public DbSet<Bu_Plant> bu_plant { get; set; }
+        public DbSet<Historys> history { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder); 

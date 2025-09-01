@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using DUC_DCC_LogAPI.Models;
 using DUC_DCC_LogAPI.Models.Dto.Duc_DccLog;
+using DUC_DCC_LogAPI.Models.Dto.History;
 using DUC_DCC_LogAPI.Models.Dto.SaveDuc_DccLog;
 using DUC_DCC_LogAPI.Models.Dto.User;
 
@@ -15,6 +16,7 @@ namespace DUC_DCC_LogAPI
                     config.CreateMap<Application_log, Application_logDto>();
                     config.CreateMap<Application_log, SaveDUC_DCC_logDto>();
                     config.CreateMap<Users_Permission,UserResposeDto>();
+                    config.CreateMap<Historys,HistoryDto>();
 
                 });
             return mappingConfig;
