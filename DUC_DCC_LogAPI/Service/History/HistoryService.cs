@@ -30,8 +30,9 @@ namespace DUC_DCC_LogAPI.Service.History
            
             try
             {
-                var obj = await _db.history.FirstOrDefaultAsync();
-                var resule = _mapper.Map<HistoryDto>(obj);
+                var obj = await _db.history
+                    .OrderByDescending(a=>a.action_datetime).ToListAsync();
+                var resule = _mapper.Map<List<HistoryDto>>(obj);
 
                 _response.Result = resule;
                 _response.Message = _message.DistplaySuccess;
@@ -40,7 +41,14 @@ namespace DUC_DCC_LogAPI.Service.History
             }
             catch (Exception ex) { 
              _response.IsSuccess = false;
-             _response.Message = _message.an_error_occurred + ex.InnerException!.Message;
+                if (ex.InnerException != null) {
+                    _response.Message = _message.an_error_occurred + ex.InnerException!.Message;
+                }
+                else
+                {
+                    _response.Message = _message.an_error_occurred + ex.Message;
+                }
+           
 
             }
             return _response;

@@ -806,6 +806,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             try
             {
 
+                var history = new Historys(); 
+
                 var applicationLog = await _db.Application_Log.FirstOrDefaultAsync(a => a.Id == id);
                 if (applicationLog == null)
                 {
@@ -824,7 +826,18 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 applicationLog.Admin_confirm_comment = request.Admin_confirm_comment;
                 applicationLog.Admin_confirm_date = DateTime.Now;
                 applicationLog.Admin_confirm_event = request.Admin_confirm_event;
-                //_db.Application_Log.Update(sqlApplication_Log); 
+
+                history.emp_no = user!.emp_no;
+                history.fullname = $"{user.firstname} {user.lastname}";
+                history.action = applicationLog.Action;
+                history.details = applicationLog.Detail;
+                history.app_logId = applicationLog.Id;
+                history.app_log = applicationLog.App_log;
+                history.comment = applicationLog.Admin_confirm_comment;
+                history.action_datetime = DateTime.Now;
+                history.processType = "Confirm";
+                _db.history.Add(history);
+ 
                 await _db.SaveChangesAsync();
                 _response.IsSuccess = true;
                 _response.Message = _message.UpdateMessage;
@@ -844,6 +857,9 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         {
             try
             {
+                var history = new Historys();
+
+
                 var applicationLog = await _db.Application_Log.FirstOrDefaultAsync(a => a.Id == id);
                 if (applicationLog == null)
                 {
@@ -863,6 +879,17 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 applicationLog.Admin_edit_confirm_date = DateTime.Now;
                 applicationLog.Admin_confirm_edit = user.emp_no;
                 applicationLog.Admin_confirm_event = request.Admin_confirm_event;
+
+                history.emp_no = user!.emp_no;
+                history.fullname = $"{user.firstname} {user.lastname}";
+                history.action = applicationLog.Action;
+                history.details = applicationLog.Detail;
+                history.app_logId = applicationLog.Id;
+                history.app_log = applicationLog.App_log;
+                history.comment = applicationLog.Admin_confirm_comment;
+                history.action_datetime = DateTime.Now;
+                history.processType = "Edit confirm";
+                _db.history.Add(history);
                 //_db.Application_Log.Update(sqlApplication_Log); 
                 await _db.SaveChangesAsync();
 
@@ -896,7 +923,10 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     return _response;
                 }
 
-            
+             
+ 
+
+
                 var logsToUpdate = await _db.Application_Log
                                             .Where(log => request.Id!.Contains(log.Id))
                                             .ToListAsync();
@@ -915,7 +945,22 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     log.Admin_confirm_comment = request.Admin_confirm_comment;   
                     log.Admin_confirm_date = DateTime.Now;
                     log.Admin_confirm_event = request.Admin_confirm_event;
+                     
 
+                    var history = new Historys
+                    {
+                        emp_no = SqlUser.emp_no,
+                        fullname = $"{SqlUser.firstname} {SqlUser.lastname}",
+                        action = log.Action, 
+                        details = log.Detail,
+                        app_logId = log.Id,
+                        app_log = log.App_log,
+                        comment = log.Admin_confirm_comment,
+                        action_datetime = DateTime.Now,
+                        processType = "Confirm"
+                    };
+
+                    _db.history.Add(history);
                 }
                  
                 
@@ -929,6 +974,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             catch (Exception ex) {
                 _response.IsSuccess = false;
                 _response.Message = _message.an_error_occurred + ex.Message;
+                _response.Message = _message.an_error_occurred + ex.InnerException!.Message;
             }
             return _response;
         }
@@ -1232,8 +1278,10 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         {
             try
             {
+                //DateTime startDate = new DateTime(2025, 8, 1);
                 DateTime startDate = DateTime.Today.AddDays(-1);
                 DateTime endDate = DateTime.Today;
+                 
 
                 // ดึง user + plant name ที่ active และ accept
                 var plantUsers = await (
@@ -1438,7 +1486,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                 <table border='0' cellpadding='0' cellspacing='0' role='presentation'>
                                   <tr>
                                     <td align='center' bgcolor='#2196F3' style='border-radius: 8px; background: #2196F3;'>
-                                      <a href='http://localhost:5173/CRUDLogs/applog/updateDateOnEmail/{plant}/{appLog}/{datetime}' target='_blank' style='font-size: 13px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #ffffff; text-decoration: none; border-radius: 8px; padding: 5px 12px; border: 1px solid #2196F3; display: inline-block;'>
+                                      <a href=https://fits/CRUDLogs/applog/updateDateOnEmail/{plant}/{appLog}/{datetime}' target='_blank' style='font-size: 13px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #ffffff; text-decoration: none; border-radius: 8px; padding: 5px 12px; border: 1px solid #2196F3; display: inline-block;'>
                                         Confirm
                                       </a>
                                     </td>
@@ -1554,7 +1602,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 IQueryable<Application_log> query = _db.Application_Log.Where(x => x.Admin_confirm == null && x.App_log == request.tapData && x.Bu_code!.EndsWith(plantSuffix)&& x.Event_type == "unusual event" && (x.Event_type == request.CheckBoxUsual || x.Event_type == request.CheckBoxUnusual))
                      .OrderByDescending(a => a.Action_date_time);
 
-                Historys historys = new Historys();
+           
 
                 var user = await _db.Users_Permission.FirstOrDefaultAsync(a => a.emp_no == request.admin_confirm);
 
@@ -1600,19 +1648,26 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                     if (string.IsNullOrEmpty(item.Admin_confirm))
                     {
                         item.Admin_confirm = request.admin_confirm;
-                        item.Admin_confirm_comment = "save on email";
+                        item.Admin_confirm_comment = "Confirm on email";
                         item.Admin_confirm_date = DateTime.Now;
                         item.Admin_confirm_event = "Usual Event";
-
+                     
                         _db.Application_Log.Update(item);
-                        historys.fullname = $"{user!.firstname} {user.lastname}"; 
-                        historys.emp_no = request.admin_confirm;
-                        historys.details = item.Detail;
-                        historys.action = "Confrime on email";
-                        historys.app_logId = item.Id;
-                        historys.app_log = item.App_log;
-                        _db.history.Add(historys);
-
+                   
+                   
+                        var history = new Historys
+                        {
+                            emp_no = user!.emp_no,
+                            fullname = $"{user.firstname} {user.lastname}",
+                            action = item.Action,
+                            details = item.Detail,
+                            app_logId = item.Id,
+                            app_log = item.App_log,
+                            comment = item.Admin_confirm_comment,
+                            action_datetime = DateTime.Now,
+                            processType = "Confirm"
+                        };
+                        _db.history.Add(history);
                         count++;
                     }
 
@@ -1642,29 +1697,44 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 string plantSuffix = "." + plant;
                 IQueryable<Application_log> query = _db.Application_Log.Where(x => x.App_log == app_log
                 && x.Action_date_time >= startDate && x.Action_date_time < endDate
-                && x.Bu_code!.EndsWith(plantSuffix));
+                && x.Bu_code!.EndsWith(plantSuffix) && x.Event_type == "Unusual Event");
+
+                var user = await _db.Users_Permission.FirstOrDefaultAsync(a => a.emp_no == request.admin_confirm);
 
                 var obj = await query.ToListAsync();
-                //var mappList = _mapper.Map<List<Application_logDto>>(obj);
-                //_response.Result = mappList;
+               
                 int count = 0;
                 foreach (var item in obj)
                 {
                     if (string.IsNullOrEmpty(item.Admin_confirm))
                     {
                         item.Admin_confirm = request.admin_confirm;
-                        item.Admin_confirm_comment = "save on email";
+                        item.Admin_confirm_comment = "Confirm on email";
                         item.Admin_confirm_date = DateTime.Now;
                         item.Admin_confirm_event = "Usual Event";
 
                         _db.Application_Log.Update(item);
+                         
+                        var history = new Historys
+                        {
+                            emp_no = user!.emp_no,
+                            fullname = $"{user.firstname} {user.lastname}",
+                            action = item.Action,
+                            details = item.Detail,
+                            app_logId = item.Id,
+                            app_log = item.App_log,
+                            comment = item.Admin_confirm_comment,
+                            action_datetime = DateTime.Now,
+                            processType = "Confirm"
+                        };
+                        _db.history.Add(history);
+ 
                         count++;
                     }
 
                 }
 
                 
-
 
                 await _db.SaveChangesAsync();
                 _response.Result = $"รวม usual และ unusual ({count})";

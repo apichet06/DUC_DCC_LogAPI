@@ -10,6 +10,8 @@
         public string? app_log {  get; set; }
         public string? details { get; set; }
         public DateTime action_datetime { get; set; }
-
+        public string? comment { get; set; }
+        public string? processType { get; set; }
     }
 }
+ 
