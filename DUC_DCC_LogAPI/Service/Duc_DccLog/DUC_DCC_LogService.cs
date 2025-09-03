@@ -1486,7 +1486,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                                 <table border='0' cellpadding='0' cellspacing='0' role='presentation'>
                                   <tr>
                                     <td align='center' bgcolor='#2196F3' style='border-radius: 8px; background: #2196F3;'>
-                                      <a href=https://fits/CRUDLogs/applog/updateDateOnEmail/{plant}/{appLog}/{datetime}' target='_blank' style='font-size: 13px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #ffffff; text-decoration: none; border-radius: 8px; padding: 5px 12px; border: 1px solid #2196F3; display: inline-block;'>
+                                      <a href='https://fits/CRUDLogs/applog/updateDateOnEmail/{plant}/{appLog}/{datetime}' target='_blank' style='font-size: 13px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #ffffff; text-decoration: none; border-radius: 8px; padding: 5px 12px; border: 1px solid #2196F3; display: inline-block;'>
                                         Confirm
                                       </a>
                                     </td>
