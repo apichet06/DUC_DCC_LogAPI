@@ -41,6 +41,12 @@ namespace DUC_DCC_LogAPI.Controllers
             return Ok(results);
         }
 
+        [HttpGet("SavelogOnEmail")]
+        public async Task<IActionResult> GetSavelogOnEmail([FromQuery] SearchDto request)
+        {
+            var results = await _DCC_Log.GetSaveLogOnEmail(request);
+            return Ok(results);
+        }
 
         [HttpPut()]
         public async Task<IActionResult> Put([FromBody] CheckedDataDto request)

@@ -836,6 +836,14 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 history.comment = applicationLog.Admin_confirm_comment;
                 history.action_datetime = DateTime.Now;
                 history.processType = "Confirm";
+                history.bu_code = applicationLog.Bu_code;
+                history.event_type = applicationLog.Event_type;
+                history.admin_confirm_event = applicationLog.Admin_confirm_event;
+                history.username = applicationLog.Username;
+                history.group_name = applicationLog.Group_name;
+                
+
+                 
                 _db.history.Add(history);
  
                 await _db.SaveChangesAsync();
@@ -889,6 +897,12 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 history.comment = applicationLog.Admin_confirm_comment;
                 history.action_datetime = DateTime.Now;
                 history.processType = "Edit confirm";
+                history.bu_code = applicationLog.Bu_code;
+                history.event_type = applicationLog.Event_type;
+                history.admin_confirm_event = applicationLog.Admin_confirm_event;
+                history.username = applicationLog.Username;
+                history.group_name = applicationLog.Group_name;
+                 
                 _db.history.Add(history);
                 //_db.Application_Log.Update(sqlApplication_Log); 
                 await _db.SaveChangesAsync();
@@ -957,8 +971,14 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                         app_log = log.App_log,
                         comment = log.Admin_confirm_comment,
                         action_datetime = DateTime.Now,
-                        processType = "Confirm"
+                        processType = "Confirm",
+                         bu_code = log.Bu_code,
+                        event_type = log.Event_type,
+                        admin_confirm_event = log.Admin_confirm_event,
+                        username = log.Username,
+                        group_name = log.Group_name
                     };
+                     
 
                     _db.history.Add(history);
                 }
@@ -1172,6 +1192,86 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         }
         #endregion
 
+
+        #region || BuildSavelog on Email ||
+
+
+        private IQueryable<SaveDUC_DCC_logDto> BuildSaveLogOnEmail(SearchDto request)
+        {
+            string plantSuffix = "." + request.plant;
+            // เตรียม applog ตามเงื่อนไขหลัก
+            var applog = _db.Application_Log
+                .Where(x => x.Admin_confirm != null
+                    && x.App_log == request.tapData && x.Bu_code!.EndsWith(plantSuffix)
+                    && (x.Event_type == request.CheckBoxUsual || x.Event_type == request.CheckBoxUnusual));
+
+            // join + search ในฝั่ง DB
+            var applogWithJoin = from a in applog
+                                 join b in _db.Users_Permission on a.Admin_confirm equals b.emp_no into abgroup
+                                 from ab in abgroup.DefaultIfEmpty()
+                                 join c in _db.Users_Permission on a.Admin_confirm_edit equals c.emp_no into acgroup
+                                 from ac in acgroup.DefaultIfEmpty()
+                                 where string.IsNullOrEmpty(request.Search) || (
+                                       (a.Group_name ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       (a.Username ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       (a.Detail ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       (a.Action ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       (a.Bu ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       (a.Position ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       (a.Unauthorized ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       (a.Download_more_10_files_day ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       (a.Employee_resigning_within_one_month ?? "").ToLower().Contains(request.Search.ToLower().Trim()) ||
+                                       ((ab.firstname + " " + ab.lastname) ?? "").ToLower().Contains(request.Search.ToLower().Trim())
+                                 )
+                                 select new { a, ab, ac };
+
+            // สร้าง DTO
+            var query = from x in applogWithJoin
+                        select new SaveDUC_DCC_logDto
+                        {
+                            Id = x.a.Id,
+                            Group_name = x.a.Group_name,
+                            Username = x.a.Username,
+                            Action = x.a.Action,
+                            Action_date_time = x.a.Action_date_time,
+                            Detail = x.a.Detail,
+                            Bu = x.a.Bu,
+                            Position = x.a.Position,
+                            Resigned_date = x.a.Resigned_date,
+                            Days_after_action = x.a.Days_after_action,
+                            Event_type = x.a.Event_type,
+                            Unauthorized = x.a.Unauthorized,
+                            Download_more_10_files_day = x.a.Download_more_10_files_day,
+                            Employee_resigning_within_one_month = x.a.Employee_resigning_within_one_month,
+                            Is_bu_dcc = x.a.Is_bu_dcc,
+                            Admin_confirm = $"{x.ab.firstname} {x.ab.lastname}",
+                            Admin_confirm_date = x.a.Admin_confirm_date,
+                            Admin_confirm_edit = $"{x.ac.firstname} {x.ac.lastname}",
+                            Admin_edit_confirm_date = x.a.Admin_edit_confirm_date,
+                            Admin_confirm_comment = x.a.Admin_confirm_comment,
+                            Admin_confirm_event = x.a.Admin_confirm_event,
+                        };
+
+            // filter วันที่
+            if (request.startDate.HasValue)
+            {
+                var startDate = request.startDate.Value.Date;
+                query = query.Where(x => x.Action_date_time >= startDate);
+            }
+
+            if (request.endDate.HasValue)
+            {
+                var endDateExclusive = request.endDate.Value.Date.AddDays(1);
+                query = query.Where(x => x.Action_date_time < endDateExclusive);
+            }
+
+            return query;
+        }
+
+        #endregion
+
+
+
         #region || BuildSaveLogQuery || 
 
         private IQueryable<SaveDUC_DCC_logDto> BuildSaveLogQuery(SearchDto request)
@@ -1181,7 +1281,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             var applog = _db.Application_Log
                 .Where(x => x.Admin_confirm != null
                     && x.App_log == request.tapData && x.Bu_code!.EndsWith(plantSuffix)
-                    && (x.Event_type == request.CheckBoxUsual || x.Event_type == request.CheckBoxUnusual));
+                    && (x.Admin_confirm_event == request.CheckBoxUsual || x.Admin_confirm_event == request.CheckBoxUnusual));
 
             // join + search ในฝั่ง DB
             var applogWithJoin = from a in applog
@@ -1271,7 +1371,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
         #endregion
 
-
+    
 
         #region || SendEmailAsync 2025-08-19 ||
         public async Task<ResponseDto> SendMailByPlant()
@@ -1297,7 +1397,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                         u.lastname,
                         u.Plant_Id,
                         p.Plant_Name,
-                        p.Plant
+                        p.Plant,
+                        u.App_Id
                     }
                 ).ToListAsync();
 
@@ -1320,7 +1421,11 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 foreach (var plant in plants)
                 {
                     var ducLogs = allDucLogs.Where(x => x.Bu_code!.Split('.').Last() == plant.Plant).ToList();
-                    var ducUsers = plantUsers.Where(u => u.Plant_Id == plant.Plant_Id).ToList();
+                    //var ducUsers = plantUsers.Where(u => u.Plant_Id == plant.Plant_Id).ToList();
+                    var ducUsers = plantUsers
+                        .Where(u => u.Plant_Id == plant.Plant_Id
+                                 && u.App_Id.Split(',').Contains("1"))
+                        .ToList();
 
                     if (ducUsers.Count > 0) // <-- ต่อให้ไม่มี log ก็ส่งได้
                     {
@@ -1345,7 +1450,11 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
                     // ===== DCC =====
                     var dccLogs = allDccLogs.Where(x => x.Bu_code!.Split('.').Last() == plant.Plant).ToList();
-                    var dccUsers = plantUsers.Where(u => u.Plant_Id == plant.Plant_Id).ToList();
+                    //var dccUsers = plantUsers.Where(u => u.Plant_Id == plant.Plant_Id).ToList(); 
+                    var dccUsers = plantUsers
+                    .Where(u => u.Plant_Id == plant.Plant_Id
+                             && u.App_Id.Split(',').Contains("2"))
+                    .ToList();
 
                     if (dccUsers.Count > 0)
                     {
@@ -1381,6 +1490,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
             return _response;
         }
+
+         
 
         // ===== ฟังก์ชันสร้าง body HTML =====
         private string BuildEmailBody(string type, DateTime startDate, List<Application_log> logs,string plant)
@@ -1665,7 +1776,13 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                             app_log = item.App_log,
                             comment = item.Admin_confirm_comment,
                             action_datetime = DateTime.Now,
-                            processType = "Confirm"
+                            processType = "Confirm",
+                            bu_code = item.Bu_code,
+                            event_type = item.Event_type,
+                            admin_confirm_event = item.Admin_confirm_event,
+                            username = item.Username,
+                            group_name = item.Group_name 
+
                         };
                         _db.history.Add(history);
                         count++;
@@ -1714,7 +1831,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                         item.Admin_confirm_event = "Usual Event";
 
                         _db.Application_Log.Update(item);
-                         
+
                         var history = new Historys
                         {
                             emp_no = user!.emp_no,
@@ -1725,7 +1842,13 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                             app_log = item.App_log,
                             comment = item.Admin_confirm_comment,
                             action_datetime = DateTime.Now,
-                            processType = "Confirm"
+                            processType = "Confirm",
+                            bu_code = item.Bu_code,
+                            event_type = item.Event_type,
+                            admin_confirm_event = item.Admin_confirm_event,
+                            username = item.Username,
+                            group_name = item.Group_name
+
                         };
                         _db.history.Add(history);
  
@@ -1749,5 +1872,24 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
             return _response;
         }
         #endregion
+
+        public async Task<ResponseDto> GetSaveLogOnEmail(SearchDto request)
+        {
+            try
+            {
+                IEnumerable<SaveDUC_DCC_logDto> obj = await BuildSaveLogOnEmail(request).OrderBy(a => a.Event_type == "Unusual Event" ? 0 : 1).ThenByDescending(a => a.Action_date_time).ToListAsync();
+
+                IEnumerable<SaveDUC_DCC_logDto> mappDataList = _mapper.Map<IEnumerable<SaveDUC_DCC_logDto>>(obj);
+
+                _response.Result = mappDataList;
+
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.Message = _message.an_error_occurred + ex.Message;
+            }
+            return _response;
+        }
     }
 }

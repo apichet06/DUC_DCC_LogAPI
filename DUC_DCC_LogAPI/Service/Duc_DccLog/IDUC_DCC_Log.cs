@@ -11,6 +11,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
         Task<ResponseDto> GetList(SearchDto request);
         Task<ResponseDto> GetById(int id);
         Task<ResponseDto> GetSaveLogList(SearchDto request);
+        Task<ResponseDto> GetSaveLogOnEmail(SearchDto request);
         Task<ResponseDto> UpdateList(CheckedDataDto request);
         Task<ResponseDto> DataAcceptById (DataAcceptByIdDto request,int id);
         Task<ResponseDto> EditDataAccept(EditDataAcceptDto request,int id);

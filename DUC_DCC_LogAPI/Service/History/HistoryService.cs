@@ -42,8 +42,18 @@ namespace DUC_DCC_LogAPI.Service.History
                     x.app_log!.ToLower().Contains(searchTerm.Trim()) ||
                     x.details!.ToLower().Contains(searchTerm.Trim()) ||
                     x.comment!.ToLower().Contains(searchTerm.Trim()) ||
-                    x.processType!.ToLower().Contains(searchTerm.Trim()));
+                    x.processType!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.group_name!.ToLower().Contains(searchTerm.Trim()) ||
+                    x.username!.ToLower().Contains(searchTerm.Trim()) ||
+                    (x.admin_confirm_event != null && x.admin_confirm_event.ToLower() == searchTerm));
                 }
+
+                if (!string.IsNullOrEmpty(request!.App_log))
+                {
+                    string appLogSearch = request.App_log.ToLower().Trim();
+                    query = query.Where(x => x.app_log!.ToLower().Contains(appLogSearch));
+                }
+
                 if (request!.startDate.HasValue)
                 {
                     DateTime startDate = request.startDate.Value.Date; // เอาเฉพาะส่วนวันที่ (เวลา 00:00:00)
