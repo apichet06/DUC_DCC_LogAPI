@@ -7,7 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace DUC_DCC_LogAPI.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController] 
+    [ApiController]
+    [Authorize]
     public class ChartController(IChart chart) : ControllerBase
 
     {

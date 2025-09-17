@@ -1,5 +1,6 @@
 ﻿using DUC_DCC_LogAPI.Models;
 using DUC_DCC_LogAPI.Service.UserPermissionService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,6 +8,7 @@ namespace DUC_DCC_LogAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class UserPermissionController(IUserPermissionService users) : ControllerBase
     {
         private readonly IUserPermissionService _userService = users;

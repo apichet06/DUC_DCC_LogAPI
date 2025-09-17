@@ -521,6 +521,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                              select new Application_logDto
                                 {
                                     Id = id,
+                                    Bu_code =a.Bu_code,
                                     Group_name = a.Group_name,
                                     Username = a.Username,
                                     Action = a.Action,
@@ -841,9 +842,11 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 history.admin_confirm_event = applicationLog.Admin_confirm_event;
                 history.username = applicationLog.Username;
                 history.group_name = applicationLog.Group_name;
-                
+                history.master_action_datetime = applicationLog.Action_date_time;
 
-                 
+
+
+
                 _db.history.Add(history);
  
                 await _db.SaveChangesAsync();
@@ -902,7 +905,9 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 history.admin_confirm_event = applicationLog.Admin_confirm_event;
                 history.username = applicationLog.Username;
                 history.group_name = applicationLog.Group_name;
-                 
+                history.master_action_datetime = applicationLog.Action_date_time;
+
+
                 _db.history.Add(history);
                 //_db.Application_Log.Update(sqlApplication_Log); 
                 await _db.SaveChangesAsync();
@@ -976,7 +981,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                         event_type = log.Event_type,
                         admin_confirm_event = log.Admin_confirm_event,
                         username = log.Username,
-                        group_name = log.Group_name
+                        group_name = log.Group_name,
+                        master_action_datetime = log.Action_date_time
                     };
                      
 
@@ -1194,7 +1200,6 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
 
 
         #region || BuildSavelog on Email ||
-
 
         private IQueryable<SaveDUC_DCC_logDto> BuildSaveLogOnEmail(SearchDto request)
         {
@@ -1614,6 +1619,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                         <tr>
                           <th>No</th>
                           <th>Group Name</th>
+                          <th>Action</th>
                           <th>Username</th>
                           <th>Action Date/Time</th>
                           <th>Detail</th>
@@ -1631,6 +1637,7 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                 <tr>
                   <td>{index++}</td>
                   <td>{log.Group_name}</td>
+                  <td>{log.Action}</td>
                   <td>{log.Username}</td>
                   <td>{log.Action_date_time:yyyy-MM-dd HH:mm:ss}</td>
                   <td>{log.Detail}</td>
@@ -1781,7 +1788,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                             event_type = item.Event_type,
                             admin_confirm_event = item.Admin_confirm_event,
                             username = item.Username,
-                            group_name = item.Group_name 
+                            group_name = item.Group_name,
+                            master_action_datetime = item.Action_date_time
 
                         };
                         _db.history.Add(history);
@@ -1847,7 +1855,8 @@ namespace DUC_DCC_LogAPI.Service.Duc_DccLog
                             event_type = item.Event_type,
                             admin_confirm_event = item.Admin_confirm_event,
                             username = item.Username,
-                            group_name = item.Group_name
+                            group_name = item.Group_name,
+                            master_action_datetime = item.Action_date_time
 
                         };
                         _db.history.Add(history);

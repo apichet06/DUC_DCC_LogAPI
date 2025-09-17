@@ -31,6 +31,7 @@
         public string? event_type { get; set; }
 
         public string? processType { get; set; }
+        public DateTime? master_action_datetime { get; set; }
     }
 }
  

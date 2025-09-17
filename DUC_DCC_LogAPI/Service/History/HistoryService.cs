@@ -46,6 +46,7 @@ namespace DUC_DCC_LogAPI.Service.History
                     x.group_name!.ToLower().Contains(searchTerm.Trim()) ||
                     x.username!.ToLower().Contains(searchTerm.Trim()) ||
                     (x.admin_confirm_event != null && x.admin_confirm_event.ToLower() == searchTerm));
+
                 }
 
                 if (!string.IsNullOrEmpty(request!.App_log))

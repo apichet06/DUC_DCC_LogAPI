@@ -9,17 +9,20 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using static DUC_DCC_LogAPI.Constant.Constants;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DUC_DCC_LogAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+  
     public class DUC_DCCController(IDUC_DCC_Log duclog) : ControllerBase
     {
 
         private readonly IDUC_DCC_Log _DCC_Log = duclog;
 
         [HttpGet("ReportLog")]
+        [Authorize]
         public async Task<IActionResult> GetList([FromQuery] SearchDto request)
         {
             var results = await _DCC_Log.GetList(request);
@@ -28,6 +31,7 @@ namespace DUC_DCC_LogAPI.Controllers
         }
 
         [HttpGet("ReportLog/{id:int}")]
+        [Authorize]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _DCC_Log.GetById(id); 
@@ -35,6 +39,7 @@ namespace DUC_DCC_LogAPI.Controllers
         }
 
         [HttpGet("SaveReportLog")]
+        [Authorize]
         public async Task<IActionResult> GetSavelog([FromQuery] SearchDto request)
         {
             var results = await _DCC_Log.GetSaveLogList(request);
@@ -42,6 +47,7 @@ namespace DUC_DCC_LogAPI.Controllers
         }
 
         [HttpGet("SavelogOnEmail")]
+        [Authorize]
         public async Task<IActionResult> GetSavelogOnEmail([FromQuery] SearchDto request)
         {
             var results = await _DCC_Log.GetSaveLogOnEmail(request);
@@ -49,6 +55,7 @@ namespace DUC_DCC_LogAPI.Controllers
         }
 
         [HttpPut()]
+        [Authorize]
         public async Task<IActionResult> Put([FromBody] CheckedDataDto request)
         {
             var results = await _DCC_Log.UpdateList(request);
@@ -57,6 +64,7 @@ namespace DUC_DCC_LogAPI.Controllers
 
 
         [HttpPut("AcceptById/{id:int}")]
+        [Authorize]
         public async Task<IActionResult> putAcceptById([FromBody] DataAcceptByIdDto request, int id)
         {
             var results = await _DCC_Log.DataAcceptById(request, id);
@@ -64,6 +72,7 @@ namespace DUC_DCC_LogAPI.Controllers
         }
 
         [HttpPut("EditAccept/{id:int}")]
+        [Authorize]
         public async Task<IActionResult> putEdit([FromBody] EditDataAcceptDto request,int id)
         {
             var results = await _DCC_Log.EditDataAccept(request,id);
@@ -71,19 +80,21 @@ namespace DUC_DCC_LogAPI.Controllers
         }
 
         [HttpGet("SendMailSchedule")]
+        [Authorize]
         public async Task<IActionResult> GetSendMail()
         {
             var results = await _DCC_Log.SendMail();
             return Ok(results);
         }
 
-        [HttpGet("SendMailByPlant")]
+        [HttpGet("SendMailByPlant")] 
         public async Task<IActionResult> SendMailByPlant()
         {
             return Ok( await _DCC_Log.SendMailByPlant());
         }
 
         [HttpPut("SaveAllDayInEmail/{plant}/{app_log}/{Datetime}")]
+        [Authorize]
         public async Task<IActionResult> SaveAllDayInEmail([FromBody] DataAcceptDataAllEamil request, DateTime Datetime, string plant, string app_log)
         {
             return Ok(await _DCC_Log.SaveAllDayInEmail(request, Datetime, plant, app_log));

@@ -80,7 +80,7 @@ namespace DUC_DCC_LogAPI.Service.AuthenService
                 var token = new JwtSecurityToken(
                     _configuration["Jwt:Issuer"],
                     _configuration["Jwt:Audience"],
-                claims, expires: DateTime.Now.AddHours(24),
+                claims, expires: DateTime.Now.AddDays(2),
                 signingCredentials: singIn);
 
                 var result = _mapper.Map<UserResposeDto>(user);
